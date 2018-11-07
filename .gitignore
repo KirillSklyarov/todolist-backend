@@ -1,0 +1,16 @@
+
+###> symfony/framework-bundle ###
+/.env
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
+
+###> IDEs and editors ###
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+###< IDEs and editors ###
