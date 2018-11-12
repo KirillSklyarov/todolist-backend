@@ -40,7 +40,7 @@ class Token
     /**
      * @var User
      * @ORM\ManyToOne(targetEntity="App\Entity\User", inversedBy="tokens")
-     * @ORM\JoinColumn(name="user_id", referencedColumnName="id", nullable=false)
+     * @ORM\JoinColumn(name="user_id", referencedColumnName="id", nullable=false, onDelete="CASCADE")
      */
     private $user;
 
@@ -52,7 +52,6 @@ class Token
      */
     public function __construct()
     {
-        $this->createdAt = new \DateTime();
         $this->uuid = Uuid::uuid4();
     }
 

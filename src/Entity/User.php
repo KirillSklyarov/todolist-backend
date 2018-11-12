@@ -37,7 +37,7 @@ class User implements UserInterface
 
     /**
      * @var string The hashed password
-     * @ORM\Column(type="string", name="password")
+     * @ORM\Column(type="string", name="password", nullable=true)
      */
     private $password;
 
@@ -45,6 +45,24 @@ class User implements UserInterface
      * @ORM\OneToMany(targetEntity="App\Entity\Token", mappedBy="user", orphanRemoval=true)
      */
     private $tokens;
+
+    /**
+     * @var boolean
+     * @ORM\Column(type="boolean", name="permanent")
+     */
+    private $permanent;
+
+    /**
+     * @var \DateTimeInterface
+     * @ORM\Column(type="datetime", name="created_at")
+     */
+    private $createdAt;
+
+    /**
+     * @var \DateTimeInterface
+     * @ORM\Column(type="datetime", name="updated_at")
+     */
+    private $updatedAt;
 
     /**
      * User constructor.
@@ -173,6 +191,42 @@ class User implements UserInterface
                 $token->setUser(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getPermanent(): ?bool
+    {
+        return $this->permanent;
+    }
+
+    public function setPermanent(bool $permanent): self
+    {
+        $this->permanent = $permanent;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeInterface
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTimeInterface $createdAt): self
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(\DateTimeInterface $updatedAt): self
+    {
+        $this->updatedAt = $updatedAt;
 
         return $this;
     }

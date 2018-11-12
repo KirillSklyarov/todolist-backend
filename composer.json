@@ -15,7 +15,9 @@
     },
     "require-dev": {
         "symfony/dotenv": "*",
-        "symfony/maker-bundle": "^1.9"
+        "symfony/maker-bundle": "^1.9",
+        "symfony/var-dumper": "*",
+        "symfony/web-server-bundle": "*"
     },
     "config": {
         "preferred-install": {

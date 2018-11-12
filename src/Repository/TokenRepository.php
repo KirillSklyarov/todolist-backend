@@ -4,6 +4,9 @@ namespace App\Repository;
 
 use App\Entity\Token;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\ConnectionException;
+use Doctrine\ORM\ORMException;
+use Doctrine\ORM\ORMInvalidArgumentException;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 
 /**
@@ -17,6 +20,30 @@ class TokenRepository extends ServiceEntityRepository
     public function __construct(RegistryInterface $registry)
     {
         parent::__construct($registry, Token::class);
+    }
+
+    /**
+     * @param Token $token
+     * @throws ORMInvalidArgumentException
+     * @throws ORMException
+     * @throws ConnectionException
+     */
+    public function create(Token $token)
+    {
+        $em = $this->getEntityManager();
+        $em->getConnection()->beginTransaction(); // suspend auto-commit
+        try {
+            $dateTime = new \DateTime();
+            $token->setCreatedAt($dateTime)
+                ->setUpdatedAt($dateTime);
+            $em->persist($token);
+            $em->flush($token);
+            $em->getConnection()->commit();
+        } catch (\Exception $e) {
+            $em->getConnection()->rollBack();
+
+            throw $e;
+        }
     }
 
     // /**
