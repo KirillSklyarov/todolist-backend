@@ -114,4 +114,13 @@ class Token
 
         return $this;
     }
+
+    public function toArray() {
+        return [
+            'uuid' => $this->getUuid(),
+            'createdAt' => $this->getCreatedAt()->getTimestamp(),
+            'updatedAt' => $this->getUpdatedAt()->getTimestamp(),
+            'user' => $this->getUser()->toArray()
+        ];
+    }
 }

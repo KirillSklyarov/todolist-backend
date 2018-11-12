@@ -230,4 +230,15 @@ class User implements UserInterface
 
         return $this;
     }
+
+    public function toArray()
+    {
+        return [
+            'username' => $this->getUsername(),
+            'createdAt' => $this->getCreatedAt()->getTimestamp(),
+            'updatedAt' => $this->getUpdatedAt()->getTimestamp(),
+            'isPermanent' => $this->getPermanent(),
+            'roles' => $this->getRoles()
+        ];
+    }
 }

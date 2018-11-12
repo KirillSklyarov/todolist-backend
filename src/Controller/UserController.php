@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Util\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
@@ -13,24 +14,19 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class UserController extends AbstractController
 {
-//    /**
-//     * @Route("/user", name="user")
-//     */
-//    public function index()
-//    {
-//        return $this->json([
-//            'message' => 'Welcome to your new controller!',
-//            'path' => 'src/Controller/UserController.php',
-//        ]);
-//    }
-
     /**
      * @Route("/user/temporary/create", methods={"POST"})
+     * @param UserService $userService
+     * @return JsonResponse
+     * @throws \Exception
      */
     public function createTemporary(UserService $userService) {
-//        $userService = $this->get('user.service');
-        $token = $userService->createTemporaryUser();
-        dump($token);
-        die;
+        try {
+            $token = $userService->createTemporaryUser();
+            return new JsonResponse($token->toArray());
+        } catch (\Exception $e) {
+            // TODO log
+            throw $e;
+        }
     }
 }
