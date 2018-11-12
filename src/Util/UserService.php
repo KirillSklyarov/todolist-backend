@@ -13,6 +13,7 @@ use App\Entity\Token;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
+use Symfony\Component\Security\Core\Encoder\PasswordEncoderInterface;
 
 class UserService
 {
@@ -21,17 +22,23 @@ class UserService
      */
     private $em;
 
-    public function __construct(EntityManagerInterface $em)
+    /**
+     * @var PasswordEncoderInterface
+     */
+    private $encoder;
+
+    public function __construct(EntityManagerInterface $em, PasswordEncoderInterface $encoder)
     {
         $this->em = $em;
+        $this->encoder = $encoder;
     }
 
-    public function createPermanentUser(string $username, string $password)
+    public function createPermanent(string $username, string $password)
     {
 
     }
 
-    public function createTemporaryUser(): Token
+    public function createTemporary(): Token
     {
         $userRepository = $this->em->getRepository(User::class);
         $tokenRepository = $this->em->getRepository(Token::class);
@@ -59,5 +66,10 @@ class UserService
         }
 
         return $token;
+    }
+
+    public function convert(User $user, string $username, string $plainPassword)
+    {
+//        $user->set
     }
 }

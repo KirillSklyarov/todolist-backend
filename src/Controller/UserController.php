@@ -22,7 +22,7 @@ class UserController extends AbstractController
      */
     public function createTemporary(UserService $userService) {
         try {
-            $token = $userService->createTemporaryUser();
+            $token = $userService->createTemporary();
             return new JsonResponse($token->toArray());
         } catch (\Exception $e) {
             // TODO log

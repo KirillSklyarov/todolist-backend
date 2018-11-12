@@ -47,6 +47,29 @@ class UserRepository extends ServiceEntityRepository
         }
     }
 
+    /**
+     * @param User $user
+     * @throws ORMInvalidArgumentException
+     * @throws ORMException
+     * @throws ConnectionException
+     */
+    public function update(User $user)
+    {
+        $em = $this->getEntityManager();
+        $em->getConnection()->beginTransaction(); // suspend auto-commit
+        try {
+            $dateTime = new \DateTime();
+            $user->setUpdatedAt($dateTime);
+            $em->merge($user);
+            $em->flush($user);
+            $em->getConnection()->commit();
+        } catch (\Exception $e) {
+            $em->getConnection()->rollBack();
+
+            throw $e;
+        }
+    }
+
     // /**
     //  * @return User[] Returns an array of User objects
     //  */
