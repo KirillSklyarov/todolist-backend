@@ -29,4 +29,17 @@ class UserController extends AbstractController
             throw $e;
         }
     }
+
+    /**
+     * @Route("/user/info", methods={"GET"})
+     */
+    public function info()
+    {
+        $user = $this->getUser();
+        return new JsonResponse([
+           'hello' => 'world',
+            'user' => $this->getUser()->getUsername()
+        ]);
+
+    }
 }

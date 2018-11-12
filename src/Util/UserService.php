@@ -14,6 +14,7 @@ use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Security\Core\Encoder\PasswordEncoderInterface;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class UserService
 {
@@ -23,11 +24,11 @@ class UserService
     private $em;
 
     /**
-     * @var PasswordEncoderInterface
+     * @var UserPasswordEncoderInterface
      */
     private $encoder;
 
-    public function __construct(EntityManagerInterface $em, PasswordEncoderInterface $encoder)
+    public function __construct(EntityManagerInterface $em, UserPasswordEncoderInterface  $encoder)
     {
         $this->em = $em;
         $this->encoder = $encoder;
