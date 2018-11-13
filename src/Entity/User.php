@@ -65,6 +65,11 @@ class User implements UserInterface
     private $updatedAt;
 
     /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $registratedAt;
+
+    /**
      * User constructor.
      */
     public function __construct()
@@ -109,6 +114,15 @@ class User implements UserInterface
     public function setRoles(array $roles): self
     {
         $this->roles = $roles;
+
+        return $this;
+    }
+
+    public function addRole(string $role): self
+    {
+        if (!\in_array($role, $this->roles)) {
+            $this->roles[] = $role;
+        }
 
         return $this;
     }
@@ -195,6 +209,14 @@ class User implements UserInterface
         return $this;
     }
 
+    public function clearTokens()
+    {
+        $this->tokens->clear();
+
+        return $this;
+
+    }
+
     public function getPermanent(): ?bool
     {
         return $this->permanent;
@@ -240,5 +262,17 @@ class User implements UserInterface
             'isPermanent' => $this->getPermanent(),
             'roles' => $this->getRoles()
         ];
+    }
+
+    public function getRegistratedAt(): ?\DateTimeInterface
+    {
+        return $this->registratedAt;
+    }
+
+    public function setRegistratedAt(?\DateTimeInterface $registratedAt): self
+    {
+        $this->registratedAt = $registratedAt;
+
+        return $this;
     }
 }

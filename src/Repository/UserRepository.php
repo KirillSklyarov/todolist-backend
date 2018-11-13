@@ -34,9 +34,6 @@ class UserRepository extends ServiceEntityRepository
         $em = $this->getEntityManager();
         $em->getConnection()->beginTransaction(); // suspend auto-commit
         try {
-            $dateTime = new \DateTime();
-            $user->setCreatedAt($dateTime)
-                ->setUpdatedAt($dateTime);
             $em->persist($user);
             $em->flush($user);
             $em->getConnection()->commit();
@@ -58,8 +55,6 @@ class UserRepository extends ServiceEntityRepository
         $em = $this->getEntityManager();
         $em->getConnection()->beginTransaction(); // suspend auto-commit
         try {
-            $dateTime = new \DateTime();
-            $user->setUpdatedAt($dateTime);
             $em->merge($user);
             $em->flush($user);
             $em->getConnection()->commit();

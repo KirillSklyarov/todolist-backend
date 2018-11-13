@@ -33,9 +33,6 @@ class TokenRepository extends ServiceEntityRepository
         $em = $this->getEntityManager();
         $em->getConnection()->beginTransaction(); // suspend auto-commit
         try {
-            $dateTime = new \DateTime();
-            $token->setCreatedAt($dateTime)
-                ->setUpdatedAt($dateTime);
             $em->persist($token);
             $em->flush($token);
             $em->getConnection()->commit();

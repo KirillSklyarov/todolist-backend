@@ -28,7 +28,7 @@ class UserService
      */
     private $encoder;
 
-    public function __construct(EntityManagerInterface $em, UserPasswordEncoderInterface  $encoder)
+    public function __construct(EntityManagerInterface $em, UserPasswordEncoderInterface $encoder)
     {
         $this->em = $em;
         $this->encoder = $encoder;
@@ -41,10 +41,13 @@ class UserService
 
     public function createTemporary(): Token
     {
+        $dateTime = new \DateTime();
         $userRepository = $this->em->getRepository(User::class);
         $tokenRepository = $this->em->getRepository(Token::class);
         $user = (new User())
-            ->setPermanent(false);
+            ->setPermanent(false)
+            ->setCreatedAt($dateTime)
+            ->setUpdatedAt($dateTime);
         try {
             $user->setUsername(Uuid::uuid4());
             $token = new Token();
@@ -58,7 +61,9 @@ class UserService
             // TODO log;
             throw $e;
         }
-        $token->setUser($user);
+        $token->setUser($user)
+            ->setCreatedAt($dateTime)
+            ->setUpdatedAt($dateTime);
         try {
             $tokenRepository->create($token);
         } catch (\Exception $e) {
@@ -69,8 +74,18 @@ class UserService
         return $token;
     }
 
-    public function convert(User $user, string $username, string $plainPassword)
+    public function register(User $user, string $username, string $plainPassword)
     {
-//        $user->set
+        $dateTime = new \DateTime();
+        $user->setUsername($username)
+            ->setPermanent(true)
+            ->addRole('ROLE_REGISTRATED_USER')
+            ->setPlainPassword($plainPassword)
+            ->setUpdatedAt($dateTime)
+            ->setRegistratedAt($dateTime);
+        $encoded = $this->encoder->encodePassword($user, $plainPassword);
+        $user->setPassword($encoded);
+        $userRepository = $this->em->getRepository(User::class);
+        $userRepository->update($user);
     }
 }
