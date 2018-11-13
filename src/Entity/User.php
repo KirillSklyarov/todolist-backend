@@ -6,6 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\UserRepository")
@@ -21,6 +22,15 @@ class User implements UserInterface
     private $id;
 
     /**
+     * @var string
+     * @Assert\NotBlank()
+     * @Assert\Length(
+     *     min = 2,
+     *     max = 32
+     * )
+     * @Assert\Regex(
+     *     pattern="/^[\w.\-]+$/"
+     * )
      * @ORM\Column(type="string", length=180, unique=true, name="username")
      */
     private $username;
@@ -32,6 +42,14 @@ class User implements UserInterface
 
     /**
      * @var string|null
+     * @Assert\NotBlank()
+     * @Assert\Length(
+     *     min = 1,
+     *     max = 4096
+     * )
+     * @Assert\Regex(
+     *     pattern="/^^[\w!@#$%^&*()<\-=+.,.?]+$/"
+     * )
      */
     private $plainPassword;
 
