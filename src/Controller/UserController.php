@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Entity\Token;
 use App\Entity\User;
 use App\Util\UserService;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -16,6 +18,14 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class UserController extends AbstractController
 {
+
+    private $em;
+
+    public function __construct(EntityManagerInterface $em)
+    {
+        $this->em = $em;
+    }
+
     /**
      * @Route("/user/create", methods={"POST"}, name="create")
      * @param UserService $userService
@@ -23,13 +33,27 @@ class UserController extends AbstractController
      * @throws \Exception
      */
     public function create(UserService $userService) {
-        try {
-            $token = $userService->createTemporary();
-            return new JsonResponse($token->toArray());
-        } catch (\Exception $e) {
-            // TODO log
-            throw $e;
-        }
+
+
+        $dateTime = new \DateTime();
+        $userRepository = $this->em->getRepository(User::class);
+        $tokenRepository = $this->em->getRepository(Token::class);
+        $user = (new User())
+            ->setPermanent(false)
+            ->setCreatedAt($dateTime)
+            ->setUpdatedAt($dateTime);
+
+        $user->setUsername(Uuid::uuid4());
+        $token = new Token();
+        $userRepository->create($user);
+
+        $token->setUser($user)
+            ->setCreatedAt($dateTime)
+            ->setUpdatedAt($dateTime);
+        $tokenRepository->create($token);
+
+        $token = $userService->createTemporary();
+        return new JsonResponse($token->toArray());
     }
 
     /**
@@ -38,23 +62,17 @@ class UserController extends AbstractController
      * @return JsonResponse
      * @throws \Exception
      */
-    public function register(UserService $userService) {
+    public function register() {
+        $now = new \DateTime();
         $user = $this->getUser();
-//        $token = $this->container->get('security.token_storage')->getToken();
         $user->clearTokens();
         $userRepository = $this->getDoctrine()->getRepository(User::class);
         $userRepository->update($user);
         $token = (new Token())
+            ->setCreatedAt($now)
+            ->setUpdatedAt($now)
             ->setUser($user);
-        die;
-
-        try {
-            $token = $userService->createTemporary();
-            return new JsonResponse($token->toArray());
-        } catch (\Exception $e) {
-            // TODO log
-            throw $e;
-        }
+        return new JsonResponse($token->toArray());
     }
 
     /**

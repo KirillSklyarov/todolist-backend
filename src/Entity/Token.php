@@ -39,6 +39,11 @@ class Token
     private $user;
 
     /**
+     * @ORM\Column(type="datetime")
+     */
+    private $updatedAt;
+
+    /**
      * Token constructor.
      * @throws UnsatisfiedDependencyException if `Moontoast\Math\BigNumber` is not present
      * @throws \InvalidArgumentException
@@ -97,5 +102,17 @@ class Token
             'updatedAt' => $this->getUpdatedAt()->getTimestamp(),
             'user' => $this->getUser()->toArray()
         ];
+    }
+
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(\DateTimeInterface $updatedAt): self
+    {
+        $this->updatedAt = $updatedAt;
+
+        return $this;
     }
 }
