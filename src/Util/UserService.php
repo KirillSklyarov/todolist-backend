@@ -82,7 +82,7 @@ class UserService
             ->addRole('ROLE_REGISTRATED_USER')
             ->setPlainPassword($plainPassword)
             ->setUpdatedAt($dateTime)
-            ->setRegistratedAt($dateTime);
+            ->setRegistredAt($dateTime);
         $encoded = $this->encoder->encodePassword($user, $plainPassword);
         $user->setPassword($encoded);
         $userRepository = $this->em->getRepository(User::class);

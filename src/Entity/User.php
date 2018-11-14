@@ -26,10 +26,13 @@ class User implements UserInterface
      * @Assert\NotBlank()
      * @Assert\Length(
      *     min = 2,
-     *     max = 32
+     *     max = 32,
+     *     minMessage="Минимальная длина логина 2 символа",
+     *     maxMessage="Максимальная длина логина 32 символа"
      * )
      * @Assert\Regex(
-     *     pattern="/^[\w.\-]+$/"
+     *     pattern="/^[\w.\-]+$/",
+     *     message="Допустимые символы в логине: латинские строчные и заглавные буквы, арабские цифры, набор спецсимволов: -._"
      * )
      * @ORM\Column(type="string", length=180, unique=true, name="username")
      */
@@ -42,13 +45,17 @@ class User implements UserInterface
 
     /**
      * @var string|null
-     * @Assert\NotBlank()
+     * @Assert\NotBlank(
+     *     message="Поле password должно присутствовать и не может быть пустым"
+     * )
      * @Assert\Length(
      *     min = 1,
-     *     max = 4096
+     *     max = 4096,
+     *     maxMessage="Максимальная длина пароля 4096 символов"
      * )
      * @Assert\Regex(
-     *     pattern="/^^[\w!@#$%^&*()<\-=+.,.?]+$/"
+     *     pattern="/^[\w!@#$%^&*()<>\-=+.,.?]+$/",
+     *     message="Допустимые символы в пароле: латинские строчные и заглавные буквы, арабские цифры, набор спецсимволов: @#$%^&*()<>-=+.,.?"
      * )
      */
     private $plainPassword;
@@ -83,9 +90,10 @@ class User implements UserInterface
     private $updatedAt;
 
     /**
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var \DateTimeInterface
+     * @ORM\Column(type="datetime", name="registred_at", nullable=true)
      */
-    private $registratedAt;
+    private $registredAt;
 
     /**
      * User constructor.
@@ -277,19 +285,20 @@ class User implements UserInterface
             'username' => $this->getUsername(),
             'createdAt' => $this->getCreatedAt()->getTimestamp(),
             'updatedAt' => $this->getUpdatedAt()->getTimestamp(),
+            'registredAt' => $this->getRegistredAt()->getTimestamp(),
             'isPermanent' => $this->getPermanent(),
             'roles' => $this->getRoles()
         ];
     }
 
-    public function getRegistratedAt(): ?\DateTimeInterface
+    public function getRegistredAt(): ?\DateTimeInterface
     {
-        return $this->registratedAt;
+        return $this->registredAt;
     }
 
-    public function setRegistratedAt(?\DateTimeInterface $registratedAt): self
+    public function setRegistredAt(?\DateTimeInterface $registredAt): self
     {
-        $this->registratedAt = $registratedAt;
+        $this->registredAt = $registredAt;
 
         return $this;
     }

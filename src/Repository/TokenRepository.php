@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Token;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\ConnectionException;
 use Doctrine\ORM\ORMException;
@@ -41,6 +42,28 @@ class TokenRepository extends ServiceEntityRepository
 
             throw $e;
         }
+    }
+
+    public function deleteOld(\DateTime $time, ?User $user = null)
+    {
+        $em = $this->getEntityManager();
+        $em->getConnection()->beginTransaction(); // suspend auto-commit
+        try {
+            $qb = $this->createQueryBuilder('token');
+            $qb->delete()
+                ->where($qb->expr()->lt('token.updatedAt', ':date'))
+                ->setParameter('date',  $time);
+            if ($user) {
+                $qb->andWhere($qb->expr()->eq('token.user', ':user'))
+                    ->setParameter('user', $user);
+            }
+            $query = $qb->getQuery();
+            $query->execute();
+            $em->getConnection()->commit();
+        } catch (\Exception $e) {
+            throw $e;
+        }
+
     }
 
     // /**

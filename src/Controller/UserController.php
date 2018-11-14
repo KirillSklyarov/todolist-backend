@@ -2,18 +2,21 @@
 
 namespace App\Controller;
 
+use App\Entity\Input\InputUser;
 use App\Entity\Token;
 use App\Entity\User;
+use App\Exception\ClassException;
+use App\Exception\ValidationException;
 use App\Repository\TokenRepository;
 use App\Repository\UserRepository;
-use App\Util\UserService;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
  * Class UserController
@@ -23,12 +26,12 @@ use Symfony\Component\Routing\Annotation\Route;
 class UserController extends AbstractController
 {
 
-    private $em;
-
-    public function __construct(EntityManagerInterface $em)
-    {
-        $this->em = $em;
-    }
+//    private $em;
+//
+//    public function __construct(EntityManagerInterface $em)
+//    {
+//        $this->em = $em;
+//    }
 
     /**
      * @Route("/user/create", methods={"POST"}, name="create")
@@ -37,7 +40,8 @@ class UserController extends AbstractController
      * @return JsonResponse
      * @throws \Exception
      */
-    public function create(UserRepository $userRepository, TokenRepository $tokenRepository) {
+    public function create(UserRepository $userRepository,
+                           TokenRepository $tokenRepository) {
         $dateTime = new \DateTime();
         $user = (new User())
             ->setPermanent(false)
@@ -66,21 +70,37 @@ class UserController extends AbstractController
      */
     public function register(Request $request,
                              UserRepository $userRepository,
-                             TokenRepository $tokenRepository) {
-        $errors = [];
-        $username = $request->get('password');
-        $password = $request->get('username');
+                             TokenRepository $tokenRepository,
+                             ValidatorInterface $validator,
+                             UserPasswordEncoderInterface $encoder) {
+
         $user = $this->getUser();
+        if (!($user instanceof User)) {
+            throw new ClassException($user, '$user',User::class);
+        }
         $now = new \DateTime();
+
+        $user->setUsername($request->get('username'))
+            ->setPlainPassword($request->get('password'))
+            ->setPermanent(true)
+            ->setUpdatedAt($now)
+            ->setRegistredAt($now);
+        $errors = $validator->validate($user);
+        if (\count($errors) > 0) {
+            throw new ValidationException('Ошибка данных', $errors);
+        }
 
         $token = (new Token())
             ->setCreatedAt($now)
             ->setUpdatedAt($now)
             ->setUser($user);
-        $user->clearTokens();
-        $userRepository->update($user);
 
+        $encoded = $encoder->encodePassword($user, $user->getPlainPassword());
+        $user->setPassword($encoded);
+        $userRepository->update($user);
         $tokenRepository->create($token);
+        $tokenRepository->deleteOld($now, $user);
+
         return new JsonResponse($token->toArray());
     }
 
