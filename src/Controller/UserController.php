@@ -109,8 +109,6 @@ class UserController extends AbstractController
     public function info()
     {
         $user = $this->getUser();
-//        dump($user);
-//        die;
         if (!($user instanceof User)) {
             throw new ClassException($user, '$user',User::class);
         }
