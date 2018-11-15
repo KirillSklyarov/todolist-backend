@@ -25,8 +25,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class UserController extends AbstractController
 {
     /**
-     * @Route("/user/create", methods={"POST"}, name="create")
-     * @IsGranted("IS_AUTHENTICATED_ANONYMOUSLY")
+     * @Route("/user/create", methods={"POST"}, name="user_create")
      * @param UserRepository $userRepository
      * @param TokenRepository $tokenRepository
      * @return JsonResponse
@@ -54,7 +53,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route("/user/register", methods={"POST"}, name="register")
+     * @Route("/user/register", methods={"POST"}, name="user_register")
      * @IsGranted("ROLE_UNREGISTRED_USER")
      * @param Request $request
      * @param UserRepository $userRepository
@@ -101,7 +100,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route("/user/info", methods={"GET"})
+     * @Route("/user/info", methods={"GET"}, name="user_info")
      * @IsGranted("ROLE_USER")
      * @return JsonResponse
      * @throws ClassException
@@ -112,6 +111,23 @@ class UserController extends AbstractController
         if (!($user instanceof User)) {
             throw new ClassException($user, '$user',User::class);
         }
+        return new JsonResponse($user->toArray());
+
+    }
+
+    /**
+     * @Route("/user/login", methods={"POST"}, name="user_login")
+     * @return JsonResponse
+     * @throws ClassException
+     */
+    public function login()
+    {
+        $user = $this->getUser();
+        if (!($user instanceof User)) {
+            throw new ClassException($user, '$user',User::class);
+        }
+        dump($user);
+        die;
         return new JsonResponse($user->toArray());
 
     }

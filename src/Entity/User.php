@@ -101,6 +101,11 @@ class User implements UserInterface
     private $registredAt;
 
     /**
+     * @var Token|null
+     */
+    private $currentToken;
+
+    /**
      * User constructor.
      */
     public function __construct()
@@ -315,6 +320,24 @@ class User implements UserInterface
     {
         $this->registredAt = $registredAt;
 
+        return $this;
+    }
+
+    /**
+     * @return Token|null
+     */
+    public function getCurrentToken(): ?Token
+    {
+        return $this->currentToken;
+    }
+
+    /**
+     * @param Token|null $currentToken
+     * @return User
+     */
+    public function setCurrentToken(?Token $currentToken): self
+    {
+        $this->currentToken = $currentToken;
         return $this;
     }
 }

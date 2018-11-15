@@ -21,14 +21,8 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
-class TokenAuthenticator extends AbstractGuardAuthenticator
+class TokenAuthenticator extends AbstractAuthenticator
 {
-    private $em;
-
-    public function __construct(EntityManagerInterface $em)
-    {
-        $this->em = $em;
-    }
 
     /**
      * Called on every request to decide if this authenticator should be
@@ -37,7 +31,9 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
      */
     public function supports(Request $request)
     {
-        return $request->headers->has('X-AUTH-TOKEN');
+        $uri = $request->getRequestUri();
+        return $uri !== AbstractAuthenticator::LOGIN_URI &&
+            $uri !== AbstractAuthenticator::CREATE_USER;
     }
 
     /**
@@ -46,9 +42,6 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
      */
     public function getCredentials(Request $request)
     {
-
-//        dump($request);
-//        die;
         return array(
             'token' => $request->headers->get('X-AUTH-TOKEN'),
         );
@@ -58,19 +51,17 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
     {
         $userToken = $credentials['token'];
 
-
-//        dump($userToken);
-//        die;
         if (null === $userToken) {
-            dump('NULL!!!!');
-            die;
-            throw new UnauthorizedHttpException('Token');
+            // TODO reprase with bad request
+            $this->message = 'X-AUTH-TOKEN is requered';
             return;
         }
 
         $token = $this->em->getRepository(Token::class)
             ->findOneBy(['uuid' => $userToken]);
         if (null === $token) {
+            // TODO check date
+            $this->message = 'Token not found';
             return;
         }
         return $token->getUser();
@@ -94,13 +85,11 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception)
     {
         $data = array(
-            'message' => strtr($exception->getMessageKey(), $exception->getMessageData())
-
-            // or to translate this message
-            // $this->translator->trans($exception->getMessageKey(), $exception->getMessageData())
+            'message' => $this->message,
+            'code' => $this->code
         );
 
-        return new JsonResponse($data, Response::HTTP_FORBIDDEN);
+        return new JsonResponse($data, Response::HTTP_UNAUTHORIZED);
     }
 
     /**
@@ -109,15 +98,11 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
     public function start(Request $request, AuthenticationException $authException = null)
     {
         $data = array(
-            // you might translate this message
             'message' => 'Authentication Required'
         );
 
         return new JsonResponse($data, Response::HTTP_UNAUTHORIZED);
     }
 
-    public function supportsRememberMe()
-    {
-        return false;
-    }
+
 }

@@ -8,8 +8,8 @@
 
 namespace App\EventSubscriber;
 
-//use function json_last_error;
-//use function json_last_error_msg;
+
+use App\Util\JsonConverter;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -17,6 +17,8 @@ use Symfony\Component\HttpKernel\KernelEvents;
 
 class BeforeActionSubscriber implements EventSubscriberInterface
 {
+    use JsonConverter;
+
     public static function getSubscribedEvents()
     {
         return array(
@@ -30,15 +32,15 @@ class BeforeActionSubscriber implements EventSubscriberInterface
         if ($request->getContentType() !== 'json' || !$request->getContent()) {
             return;
         }
-
-        $data = \json_decode($request->getContent(), true);
-        if (\json_last_error() !== JSON_ERROR_NONE) {
-            throw new BadRequestHttpException(
-                'Invalid json body: ' . \json_last_error_msg(),
-                null,
-                \json_last_error()
-            );
-        }
+        $data = $this->convert($request->getContent());
+//        $data = \json_decode($request->getContent(), true);
+//        if (\json_last_error() !== JSON_ERROR_NONE) {
+//            throw new BadRequestHttpException(
+//                'Invalid json body: ' . \json_last_error_msg(),
+//                null,
+//                \json_last_error()
+//            );
+//        }
         $request->request->replace(\is_array($data) ? $data : []);
 
     }
