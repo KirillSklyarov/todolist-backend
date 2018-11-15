@@ -283,9 +283,10 @@ class User implements UserInterface
     {
         return [
             'username' => $this->getUsername(),
-            'createdAt' => $this->getCreatedAt()->getTimestamp(),
-            'updatedAt' => $this->getUpdatedAt()->getTimestamp(),
-            'registredAt' => $this->getRegistredAt()->getTimestamp(),
+//            'createdAt' => $this->getCreatedAt()->getTimestamp(),
+//            'updatedAt' => $this->getUpdatedAt()->getTimestamp(),
+//            'registredAt' => $this->getRegistredAt() ?
+//                $this->getRegistredAt()->getTimestamp() : null,
             'isPermanent' => $this->getPermanent(),
             'roles' => $this->getRoles()
         ];
