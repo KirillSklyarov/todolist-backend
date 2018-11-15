@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\Input\InputUser;
 use App\Entity\Token;
 use App\Entity\User;
 use App\Exception\ClassException;
@@ -10,7 +9,7 @@ use App\Exception\ValidationException;
 use App\Repository\TokenRepository;
 use App\Repository\UserRepository;
 use Ramsey\Uuid\Uuid;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,16 +24,9 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  */
 class UserController extends AbstractController
 {
-
-//    private $em;
-//
-//    public function __construct(EntityManagerInterface $em)
-//    {
-//        $this->em = $em;
-//    }
-
     /**
      * @Route("/user/create", methods={"POST"}, name="create")
+     * @IsGranted("IS_AUTHENTICATED_ANONYMOUSLY")
      * @param UserRepository $userRepository
      * @param TokenRepository $tokenRepository
      * @return JsonResponse
@@ -44,6 +36,7 @@ class UserController extends AbstractController
                            TokenRepository $tokenRepository) {
         $dateTime = new \DateTime();
         $user = (new User())
+            ->addRole(User::ROLE_UNREGISTRED_USER)
             ->setPermanent(false)
             ->setCreatedAt($dateTime)
             ->setUpdatedAt($dateTime);
@@ -62,6 +55,7 @@ class UserController extends AbstractController
 
     /**
      * @Route("/user/register", methods={"POST"}, name="register")
+     * @IsGranted("ROLE_UNREGISTRED_USER")
      * @param Request $request
      * @param UserRepository $userRepository
      * @param TokenRepository $tokenRepository
@@ -82,6 +76,8 @@ class UserController extends AbstractController
 
         $user->setUsername($request->get('username'))
             ->setPlainPassword($request->get('password'))
+            ->removeRole(User::ROLE_UNREGISTRED_USER)
+            ->addRole(User::ROLE_REGISTRED_USER)
             ->setPermanent(true)
             ->setUpdatedAt($now)
             ->setRegistredAt($now);

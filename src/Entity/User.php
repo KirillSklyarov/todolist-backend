@@ -14,6 +14,11 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 class User implements UserInterface
 {
+    const ROLE_USER = 'ROLE_USER';
+    const ROLE_REGISTRED_USER = 'ROLE_REGISTRED_USER';
+    const ROLE_UNREGISTRED_USER = 'ROLE_UNREGISTRED_USER';
+    const ROLE_ADMIN = 'ROLE_ADMIN';
+
     /**
      * @ORM\Id()
      * @ORM\GeneratedValue(strategy="IDENTITY")
@@ -134,12 +139,12 @@ class User implements UserInterface
         // guarantee every user at least has ROLE_USER
         $roles[] = 'ROLE_USER';
 
-        return array_unique($roles);
+        return \array_unique($roles);
     }
 
     public function setRoles(array $roles): self
     {
-        $this->roles = $roles;
+        $this->roles = \array_unique($roles);
 
         return $this;
     }
@@ -153,6 +158,15 @@ class User implements UserInterface
         return $this;
     }
 
+    public function removeRole(string $role): self
+    {
+        $index = \array_search($role, $this->roles);
+        if (false !== $index) {
+            \array_splice($this->roles, $index, 1);
+        }
+
+        return $this;
+    }
     /**
      * @return null|string
      */
