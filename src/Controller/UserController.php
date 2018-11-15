@@ -102,14 +102,19 @@ class UserController extends AbstractController
 
     /**
      * @Route("/user/info", methods={"GET"})
+     * @IsGranted("ROLE_USER")
+     * @return JsonResponse
+     * @throws ClassException
      */
     public function info()
     {
         $user = $this->getUser();
-        return new JsonResponse([
-           'hello' => 'world',
-            'user' => $this->getUser()->getUsername()
-        ]);
+//        dump($user);
+//        die;
+        if (!($user instanceof User)) {
+            throw new ClassException($user, '$user',User::class);
+        }
+        return new JsonResponse($user->toArray());
 
     }
 }

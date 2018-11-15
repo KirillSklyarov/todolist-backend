@@ -20,7 +20,6 @@ class ClassException extends \Exception
      * @param string $targetClassName
      * @param int $code
      * @param Throwable|null $previous
-     * @throws \ReflectionException
      */
     public function __construct($var,
                                 string $varName,

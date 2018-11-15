@@ -36,6 +36,8 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
      */
     public function supports(Request $request)
     {
+//        dump($request);
+//        die;
         return $request->headers->has('X-AUTH-TOKEN');
     }
 
@@ -45,6 +47,9 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
      */
     public function getCredentials(Request $request)
     {
+
+//        dump($request);
+//        die;
         return array(
             'token' => $request->headers->get('X-AUTH-TOKEN'),
         );
@@ -54,6 +59,9 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
     {
         $userToken = $credentials['token'];
 
+
+//        dump($userToken);
+//        die;
         if (null === $userToken) {
             return;
         }
@@ -63,7 +71,9 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
         if (null === $token) {
             return;
         }
-
+        $user = $token->getUser();
+//        dump($token);
+//        die;
         return $token->getUser();
     }
 

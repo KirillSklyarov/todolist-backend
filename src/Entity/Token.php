@@ -33,7 +33,7 @@ class Token
 
     /**
      * @var User
-     * @ORM\ManyToOne(targetEntity="App\Entity\User", inversedBy="tokens")
+     * @ORM\ManyToOne(targetEntity="App\Entity\User", inversedBy="tokens", fetch="EAGER")
      * @ORM\JoinColumn(name="user_id", referencedColumnName="id", nullable=false, onDelete="CASCADE")
      */
     private $user;
