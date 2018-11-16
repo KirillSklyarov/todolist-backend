@@ -11,7 +11,6 @@ namespace App\Security;
 
 use App\Entity\Token;
 use App\Entity\User;
-use App\Util\JsonConverter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,7 +24,6 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 class LoginPasswordAuthenticator extends AbstractAuthenticator
 {
-    use JsonConverter;
 
     /**
      * @var string
@@ -64,7 +62,6 @@ class LoginPasswordAuthenticator extends AbstractAuthenticator
             );
         }
 
-        return $this->convert($request->getContent());
     }
 
     public function getUser($credentials, UserProviderInterface $userProvider)

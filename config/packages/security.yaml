@@ -24,10 +24,10 @@ security:
             logout: ~
 
             guard:
-                entry_point: 'App\Security\LoginPasswordAuthenticator'
+#                entry_point:/ 'App\Security\LoginPasswordAuthenticator'
                 authenticators:
                     - 'App\Security\TokenAuthenticator'
-                    - 'App\Security\LoginPasswordAuthenticator'
+#                    - 'App\Security\LoginPasswordAuthenticator'
 
             stateless:  true
 
@@ -43,4 +43,6 @@ security:
     # Note: Only the *first* access control that matches will be used
     access_control:
          - { path: ^/api/v1/user/create, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-#         - { path: ^/api/v1, roles: ROLE_USER }
+         - { path: ^/api/v1/user/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+         - { path: ^/api/v1/user/register, roles: ROLE_UNREGISTRED_USER }
+         - { path: ^/api/v1, roles: ROLE_USER }

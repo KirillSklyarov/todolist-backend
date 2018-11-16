@@ -9,7 +9,6 @@ use App\Exception\ValidationException;
 use App\Repository\TokenRepository;
 use App\Repository\UserRepository;
 use Ramsey\Uuid\Uuid;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -54,7 +53,6 @@ class UserController extends AbstractController
 
     /**
      * @Route("/user/register", methods={"POST"}, name="user_register")
-     * @IsGranted("ROLE_UNREGISTRED_USER")
      * @param Request $request
      * @param UserRepository $userRepository
      * @param TokenRepository $tokenRepository
@@ -101,7 +99,6 @@ class UserController extends AbstractController
 
     /**
      * @Route("/user/info", methods={"GET"}, name="user_info")
-     * @IsGranted("ROLE_USER")
      * @return JsonResponse
      * @throws ClassException
      */
@@ -126,9 +123,10 @@ class UserController extends AbstractController
         if (!($user instanceof User)) {
             throw new ClassException($user, '$user',User::class);
         }
-        dump($user);
-        die;
-        return new JsonResponse($user->toArray());
-
+        $token = $user->getCurrentToken();
+        if (!($token instanceof Token)) {
+            throw new ClassException($token, '$token', Token::class);
+        }
+        return new JsonResponse($token->toArray());
     }
 }

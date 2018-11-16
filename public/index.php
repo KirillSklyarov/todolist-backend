@@ -1,5 +1,6 @@
 <?php
 
+
 use App\Kernel;
 use Symfony\Component\Debug\Debug;
 use Symfony\Component\Dotenv\Dotenv;
@@ -14,7 +15,8 @@ if (!isset($_SERVER['APP_ENV']) && !isset($_ENV['APP_ENV'])) {
     }
     (new Dotenv())->load(__DIR__.'/../.env');
 }
-
+//phpinfo();
+//die;
 $env = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? 'dev';
 $debug = (bool) ($_SERVER['APP_DEBUG'] ?? $_ENV['APP_DEBUG'] ?? ('prod' !== $env));
 

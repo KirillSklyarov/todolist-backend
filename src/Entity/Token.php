@@ -26,7 +26,7 @@ class Token
     private $uuid;
 
     /**
-     * @var \DateTimeInterface
+     * @var \DateTime
      * @ORM\Column(type="datetime")
      */
     private $createdAt;
@@ -39,6 +39,7 @@ class Token
     private $user;
 
     /**
+     * @var \DateTime
      * @ORM\Column(type="datetime")
      */
     private $updatedAt;
@@ -71,12 +72,12 @@ class Token
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getCreatedAt(): ?\DateTime
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeInterface $createdAt): self
+    public function setCreatedAt(\DateTime $createdAt): self
     {
         $this->createdAt = $createdAt;
 
@@ -98,18 +99,18 @@ class Token
     public function toArray() {
         return [
             'uuid' => $this->getUuid(),
-            'createdAt' => $this->getCreatedAt()->getTimestamp(),
-            'updatedAt' => $this->getUpdatedAt()->getTimestamp(),
+            'createdAt' => $this->getCreatedAt()->format('c'),
+            'updatedAt' => $this->getUpdatedAt()->format('c'),
             'user' => $this->getUser()->toArray()
         ];
     }
 
-    public function getUpdatedAt(): ?\DateTimeInterface
+    public function getUpdatedAt(): \DateTime
     {
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): self
+    public function setUpdatedAt(\DateTime $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
 

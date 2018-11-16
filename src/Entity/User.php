@@ -83,19 +83,19 @@ class User implements UserInterface
     private $permanent;
 
     /**
-     * @var \DateTimeInterface
+     * @var \DateTime
      * @ORM\Column(type="datetime", name="created_at")
      */
     private $createdAt;
 
     /**
-     * @var \DateTimeInterface
+     * @var \DateTime
      * @ORM\Column(type="datetime", name="updated_at")
      */
     private $updatedAt;
 
     /**
-     * @var \DateTimeInterface
+     * @var \DateTime|null
      * @ORM\Column(type="datetime", name="registred_at", nullable=true)
      */
     private $registredAt;
@@ -274,24 +274,24 @@ class User implements UserInterface
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getCreatedAt(): \DateTime
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeInterface $createdAt): self
+    public function setCreatedAt(\DateTime $createdAt): self
     {
         $this->createdAt = $createdAt;
 
         return $this;
     }
 
-    public function getUpdatedAt(): ?\DateTimeInterface
+    public function getUpdatedAt(): \DateTime
     {
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): self
+    public function setUpdatedAt(\DateTime $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
 
@@ -302,21 +302,21 @@ class User implements UserInterface
     {
         return [
             'username' => $this->getUsername(),
-//            'createdAt' => $this->getCreatedAt()->getTimestamp(),
-//            'updatedAt' => $this->getUpdatedAt()->getTimestamp(),
+//            'createdAt' => $this->getCreatedAt()->format('c'),
+//            'updatedAt' => $this->getUpdatedAt()->format('c'),
 //            'registredAt' => $this->getRegistredAt() ?
-//                $this->getRegistredAt()->getTimestamp() : null,
+//                $this->getRegistredAt()->format('c') : null,
             'isPermanent' => $this->getPermanent(),
             'roles' => $this->getRoles()
         ];
     }
 
-    public function getRegistredAt(): ?\DateTimeInterface
+    public function getRegistredAt(): ?\DateTime
     {
         return $this->registredAt;
     }
 
-    public function setRegistredAt(?\DateTimeInterface $registredAt): self
+    public function setRegistredAt(\DateTime $registredAt): self
     {
         $this->registredAt = $registredAt;
 
@@ -332,10 +332,10 @@ class User implements UserInterface
     }
 
     /**
-     * @param Token|null $currentToken
+     * @param Token $currentToken
      * @return User
      */
-    public function setCurrentToken(?Token $currentToken): self
+    public function setCurrentToken(Token $currentToken): self
     {
         $this->currentToken = $currentToken;
         return $this;
