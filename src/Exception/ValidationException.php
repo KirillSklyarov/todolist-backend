@@ -29,27 +29,12 @@ class ValidationException extends BadRequestHttpException
      * @throws \ReflectionException
      */
     public function __construct(string $message = null,
-                                ?ConstraintViolationListInterface $errors = null,
+                                $errors = [],
                                 \Exception $previous = null,
                                 int $code = 0,
                                 array $headers = array())
     {
-        $errorsData = [];
-
-        if ($errors instanceof ConstraintViolationListInterface) {
-            foreach ($errors as $error) {
-                if (!($error instanceof ConstraintViolationInterface)) {
-                    throw new ClassException($error, '$error', ConstraintViolationInterface::class);
-                }
-                $field = $error->getPropertyPath();
-                if (!\array_key_exists($field, $errorsData)) {
-                    $errorsData[$field] = [];
-                }
-                $errorsData[$field][] = $error->getMessage();
-            }
-        }
-
-        $this->errors = $errorsData;
+        $this->errors = $errors;
         parent::__construct($message, $previous, $code, $headers);
     }
 

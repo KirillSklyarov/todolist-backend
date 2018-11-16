@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+use Symfony\Component\Validator\ConstraintViolationInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
@@ -69,8 +70,9 @@ class UserController extends AbstractController
         if (!($user instanceof User)) {
             throw new ClassException($user, '$user',User::class);
         }
-        $now = new \DateTime();
 
+        $now = new \DateTime();
+        $errors = [];
         $user->setUsername($request->get('username'))
             ->setPlainPassword($request->get('password'))
             ->removeRole(User::ROLE_UNREGISTRED_USER)
@@ -78,7 +80,24 @@ class UserController extends AbstractController
             ->setPermanent(true)
             ->setUpdatedAt($now)
             ->setRegistredAt($now);
-        $errors = $validator->validate($user);
+        $validatorErrors = $validator->validate($user);
+        foreach ($validatorErrors as $validatorError) {
+            if (!($validatorError instanceof ConstraintViolationInterface)) {
+                throw new ClassException($validatorError, '$validatorError', ConstraintViolationInterface::class);
+            }
+            $field = $validatorError->getPropertyPath();
+            if (!\array_key_exists($field, $errors)) {
+                $errors[$field] = [];
+            }
+            $errors[$field][] = $validatorError->getMessage();
+        }
+        $existentUser = $userRepository->findOneBy(['username' => $user->getUsername()]);
+        if ($existentUser) {
+            if (!\array_key_exists('username', $errors)) {
+                $errors['username'] = [];
+            }
+            $errors['username'][] = 'Имя пользователя занято';
+        }
         if (\count($errors) > 0) {
             throw new ValidationException('Ошибка данных', $errors);
         }
