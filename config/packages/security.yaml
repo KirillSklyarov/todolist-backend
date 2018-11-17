@@ -24,10 +24,8 @@ security:
             logout: ~
 
             guard:
-#                entry_point:/ 'App\Security\LoginPasswordAuthenticator'
                 authenticators:
                     - 'App\Security\TokenAuthenticator'
-#                    - 'App\Security\LoginPasswordAuthenticator'
 
             stateless:  true
 
