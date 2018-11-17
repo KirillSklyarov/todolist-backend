@@ -5,6 +5,8 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Ramsey\Uuid\Exception\UnsatisfiedDependencyException;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -72,7 +74,8 @@ class User implements UserInterface
     private $password;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Entity\Token", mappedBy="user", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="App\Entity\Token",
+     *     mappedBy="user", orphanRemoval=true, cascade={"persist"})
      */
     private $tokens;
 
@@ -89,16 +92,22 @@ class User implements UserInterface
     private $createdAt;
 
     /**
+     * @var \DateTime|null
+     * @ORM\Column(type="datetime", name="registred_at", nullable=true)
+     */
+    private $registredAt;
+
+    /**
      * @var \DateTime
      * @ORM\Column(type="datetime", name="updated_at")
      */
     private $updatedAt;
 
     /**
-     * @var \DateTime|null
-     * @ORM\Column(type="datetime", name="registred_at", nullable=true)
+     * @var \DateTime
+     * @ORM\Column(type="datetime", name="last_enter_at")
      */
-    private $registredAt;
+    private $lastEnterAt;
 
     /**
      * @var Token|null
@@ -107,9 +116,13 @@ class User implements UserInterface
 
     /**
      * User constructor.
+     * @throws UnsatisfiedDependencyException
+     * @throws \InvalidArgumentException
+     * @throws \Exception
      */
     public function __construct()
     {
+        $this->username = Uuid::uuid4();
         $this->tokens = new ArrayCollection();
     }
 
@@ -147,6 +160,10 @@ class User implements UserInterface
         return \array_unique($roles);
     }
 
+    /**
+     * @param array $roles
+     * @return User
+     */
     public function setRoles(array $roles): self
     {
         $this->roles = \array_unique($roles);
@@ -154,6 +171,10 @@ class User implements UserInterface
         return $this;
     }
 
+    /**
+     * @param string $role
+     * @return User
+     */
     public function addRole(string $role): self
     {
         if (!\in_array($role, $this->roles)) {
@@ -163,6 +184,10 @@ class User implements UserInterface
         return $this;
     }
 
+    /**
+     * @param string $role
+     * @return User
+     */
     public function removeRole(string $role): self
     {
         $index = \array_search($role, $this->roles);
@@ -298,6 +323,30 @@ class User implements UserInterface
         return $this;
     }
 
+    public function getRegistredAt(): ?\DateTime
+    {
+        return $this->registredAt;
+    }
+
+    public function setRegistredAt(\DateTime $registredAt): self
+    {
+        $this->registredAt = $registredAt;
+
+        return $this;
+    }
+
+    public function getLastEnterAt(): \DateTime
+    {
+        return $this->lastEnterAt;
+    }
+
+    public function setLastEnterAt(\DateTime $lastEnterAt): self
+    {
+        $this->lastEnterAt = $lastEnterAt;
+
+        return $this;
+    }
+
     public function toArray()
     {
         return [
@@ -309,18 +358,6 @@ class User implements UserInterface
             'isPermanent' => $this->getPermanent(),
             'roles' => $this->getRoles()
         ];
-    }
-
-    public function getRegistredAt(): ?\DateTime
-    {
-        return $this->registredAt;
-    }
-
-    public function setRegistredAt(\DateTime $registredAt): self
-    {
-        $this->registredAt = $registredAt;
-
-        return $this;
     }
 
     /**

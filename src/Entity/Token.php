@@ -15,34 +15,36 @@ class Token
     /**
      * @ORM\Id()
      * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="integer", name="id")
      */
     private $id;
 
     /**
      * @var string
-     * @ORM\Column(type="string", length=36, unique=true)
+     * @ORM\Column(type="string", length=36, unique=true, name="uuid")
      */
     private $uuid;
 
     /**
      * @var \DateTime
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", name="created_at")
      */
     private $createdAt;
 
     /**
-     * @var User
-     * @ORM\ManyToOne(targetEntity="App\Entity\User", inversedBy="tokens", fetch="EAGER")
-     * @ORM\JoinColumn(name="user_id", referencedColumnName="id", nullable=false, onDelete="CASCADE")
+     * @var \DateTime
+     * @ORM\Column(type="datetime", name="last_usage_at")
      */
-    private $user;
+    private $lastUsageAt;
 
     /**
-     * @var \DateTime
-     * @ORM\Column(type="datetime")
+     * @var User
+     * @ORM\ManyToOne(targetEntity="App\Entity\User",
+     *     inversedBy="tokens", fetch="EAGER", cascade={"persist"})
+     * @ORM\JoinColumn(name="user_id", referencedColumnName="id",
+     *     nullable=false, onDelete="CASCADE")
      */
-    private $updatedAt;
+    private $user;
 
     /**
      * Token constructor.
@@ -60,17 +62,17 @@ class Token
         return $this->id;
     }
 
-    public function getUuid(): ?string
+    public function getUuid(): string
     {
         return $this->uuid;
     }
 
-    public function setUuid(string $uuid): self
-    {
-        $this->uuid = $uuid;
-
-        return $this;
-    }
+//    public function setUuid(string $uuid): self
+//    {
+//        $this->uuid = $uuid;
+//
+//        return $this;
+//    }
 
     public function getCreatedAt(): ?\DateTime
     {
@@ -84,14 +86,26 @@ class Token
         return $this;
     }
 
+    public function getLastUsageAt(): \DateTime
+    {
+        return $this->lastUsageAt;
+    }
+
+    public function setLastUsageAt(\DateTime $lastUsageAt): self
+    {
+        $this->lastUsageAt = $lastUsageAt;
+
+        return $this;
+    }
+
     public function getUser(): ?User
     {
         return $this->user;
     }
 
-    public function setUser(?User $usr): self
+    public function setUser(?User $user): self
     {
-        $this->user = $usr;
+        $this->user = $user;
 
         return $this;
     }
@@ -100,20 +114,8 @@ class Token
         return [
             'uuid' => $this->getUuid(),
             'createdAt' => $this->getCreatedAt()->format('c'),
-            'updatedAt' => $this->getUpdatedAt()->format('c'),
+            'lastUsageAt' => $this->getLastUsageAt()->format('c'),
             'user' => $this->getUser()->toArray()
         ];
-    }
-
-    public function getUpdatedAt(): \DateTime
-    {
-        return $this->updatedAt;
-    }
-
-    public function setUpdatedAt(\DateTime $updatedAt): self
-    {
-        $this->updatedAt = $updatedAt;
-
-        return $this;
     }
 }

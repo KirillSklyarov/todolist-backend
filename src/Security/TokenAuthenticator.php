@@ -103,7 +103,7 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
             $this->message = 'Token not found';
             return null;
         }
-        $expiredAt = clone $token->getUpdatedAt();
+        $expiredAt = clone $token->getCreatedAt();
         $interval = new \DateInterval($this->bag->get('token.lifetime'));
         $expiredAt->add($interval);
         $now = new \DateTime();

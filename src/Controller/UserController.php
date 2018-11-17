@@ -8,6 +8,7 @@ use App\Exception\ClassException;
 use App\Exception\ValidationException;
 use App\Repository\TokenRepository;
 use App\Repository\UserRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -27,27 +28,26 @@ class UserController extends AbstractController
     /**
      * @Route("/user/create", methods={"POST"}, name="user_create")
      * @param UserRepository $userRepository
-     * @param TokenRepository $tokenRepository
      * @return JsonResponse
      * @throws \Exception
      */
-    public function create(UserRepository $userRepository,
-                           TokenRepository $tokenRepository) {
-        $dateTime = new \DateTime();
+    public function create(UserRepository $userRepository)
+    {
+        $now = new \DateTime();
+        $token = (new Token())
+            ->setCreatedAt($now)
+            ->setLastUsageAt($now)
+        ;
         $user = (new User())
+            ->addToken($token)
             ->addRole(User::ROLE_UNREGISTRED_USER)
             ->setPermanent(false)
-            ->setCreatedAt($dateTime)
-            ->setUpdatedAt($dateTime);
+            ->setCreatedAt($now)
+            ->setUpdatedAt($now)
+            ->setLastEnterAt($now)
+        ;
 
-        $user->setUsername(Uuid::uuid4());
-        $token = new Token();
         $userRepository->create($user);
-
-        $token->setUser($user)
-            ->setCreatedAt($dateTime)
-            ->setUpdatedAt($dateTime);
-        $tokenRepository->create($token);
 
         return new JsonResponse($token->toArray());
     }
@@ -64,11 +64,12 @@ class UserController extends AbstractController
                              UserRepository $userRepository,
                              TokenRepository $tokenRepository,
                              ValidatorInterface $validator,
-                             UserPasswordEncoderInterface $encoder) {
+                             UserPasswordEncoderInterface $encoder)
+    {
 
         $user = $this->getUser();
         if (!($user instanceof User)) {
-            throw new ClassException($user, '$user',User::class);
+            throw new ClassException($user, '$user', User::class);
         }
 
         $now = new \DateTime();
@@ -104,8 +105,9 @@ class UserController extends AbstractController
 
         $token = (new Token())
             ->setCreatedAt($now)
-            ->setUpdatedAt($now)
-            ->setUser($user);
+            ->setLastUsageAt($now)
+            ->setUser($user)
+        ;
 
         $encoded = $encoder->encodePassword($user, $user->getPlainPassword());
         $user->setPassword($encoded);
@@ -125,7 +127,7 @@ class UserController extends AbstractController
     {
         $user = $this->getUser();
         if (!($user instanceof User)) {
-            throw new ClassException($user, '$user',User::class);
+            throw new ClassException($user, '$user', User::class);
         }
         return new JsonResponse($user->toArray());
 
@@ -133,14 +135,17 @@ class UserController extends AbstractController
 
     /**
      * @Route("/user/login", methods={"POST"}, name="user_login")
+     * @param EntityManagerInterface $em
+     * @param UserPasswordEncoderInterface $encoder
      * @return JsonResponse
      * @throws ClassException
      */
-    public function login()
+    public function login(EntityManagerInterface $em,
+                          UserPasswordEncoderInterface $encoder)
     {
         $user = $this->getUser();
         if (!($user instanceof User)) {
-            throw new ClassException($user, '$user',User::class);
+            throw new ClassException($user, '$user', User::class);
         }
         $token = $user->getCurrentToken();
         if (!($token instanceof Token)) {

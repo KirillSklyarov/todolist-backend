@@ -51,7 +51,7 @@ class TokenRepository extends ServiceEntityRepository
         try {
             $qb = $this->createQueryBuilder('token');
             $qb->delete()
-                ->where($qb->expr()->lt('token.updatedAt', ':date'))
+                ->where($qb->expr()->lt('token.createdAt', ':date'))
                 ->setParameter('date',  $time);
             if ($user) {
                 $qb->andWhere($qb->expr()->eq('token.user', ':user'))
