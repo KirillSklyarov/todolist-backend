@@ -30,7 +30,9 @@ class User implements UserInterface
 
     /**
      * @var string
-     * @Assert\NotBlank()
+     * @Assert\NotBlank(
+     *     message="Поле username должно присутствовать и иметь тип string"
+     * )
      * @Assert\Length(
      *     min = 2,
      *     max = 32,
@@ -53,7 +55,7 @@ class User implements UserInterface
     /**
      * @var string|null
      * @Assert\NotBlank(
-     *     message="Поле password должно присутствовать и не может быть пустым"
+     *     message="Поле password должно присутствовать и иметь тип string"
      * )
      * @Assert\Length(
      *     min = 1,

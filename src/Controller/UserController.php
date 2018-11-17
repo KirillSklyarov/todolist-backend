@@ -70,7 +70,6 @@ class UserController extends AbstractController
                              ValidatorInterface $validator,
                              UserPasswordEncoderInterface $encoder)
     {
-
         $user = $this->getUser();
         if (!($user instanceof User)) {
             throw new ClassException($user, '$user', User::class);
@@ -78,9 +77,22 @@ class UserController extends AbstractController
 
         $now = new \DateTime();
         $errors = [];
-        $user->setUsername($request->get('username'))
-            ->setPlainPassword($request->get('password'))
-            ->removeRole(User::ROLE_UNREGISTRED_USER)
+        $username = $request->get('username');
+        $plainPassword = $request->get('password');
+        if ('string' === \gettype($username)) {
+            $user->setUsername($username);
+        } else {
+            $errors['username'] = ['Поле username должно присутствовать и иметь тип string'];
+        }
+        if ('string' === \gettype($plainPassword)) {
+            $user->setPlainPassword($plainPassword);
+        } else {
+            $errors['plainPassword'] = ['Поле password должно присутствовать и иметь тип string'];
+        }
+        if (\count($errors) > 0) {
+            throw new ValidationException('Ошибка данных', $errors);
+        }
+        $user->removeRole(User::ROLE_UNREGISTRED_USER)
             ->addRole(User::ROLE_REGISTRED_USER)
             ->setPermanent(true)
             ->setUpdatedAt($now)
