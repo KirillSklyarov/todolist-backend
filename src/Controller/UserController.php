@@ -13,6 +13,7 @@ use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Validator\ConstraintViolationInterface;
@@ -151,24 +152,45 @@ class UserController extends BaseController
 
     /**
      * @Route("/user/login", methods={"POST"}, name="user_login")
-     * @param EntityManagerInterface $em
+     * @param Request $request
      * @param UserPasswordEncoderInterface $encoder
      * @return JsonResponse
      * @throws ClassException
+     * @throws \ReflectionException
+     * @throws \Exception
      */
-    public function login(EntityManagerInterface $em,
+    public function login(Request $request,
+                          UserRepository $userRepository,
                           UserPasswordEncoderInterface $encoder)
     {
+        $message = 'Неверный логин или пароль';
         // Implement login without Authenticator
+        $now = new \DateTime();
+        $errors = [];
+        $inputData = $this->convertJson($request);
+        if (!(\property_exists($inputData, 'username')
+            && 'string' === \gettype($inputData->username))) {
+            $errors['username'] = ['Поле username должно присутствовать и иметь тип string'];
+        }
+        if (!(property_exists($inputData, 'password')
+            && 'string' === \gettype($inputData->password))) {
+            $errors['plainPassword'] = ['Поле password должно присутствовать и иметь тип string'];
+        }
+        if (\count($errors) > 0) {
+            throw new ValidationException('Ошибка данных', $errors);
+        }
 
-        $user = $this->getUser();
-        if (!($user instanceof User)) {
-            throw new ClassException($user, '$user', User::class);
+        $user = $userRepository->findOneBy(['username' => $inputData->username]);
+        if (!$user || !$encoder->isPasswordValid($user, $inputData->password)) {
+            throw new UnauthorizedHttpException('Bearer', $message);
         }
-        $token = $user->getCurrentToken();
-        if (!($token instanceof Token)) {
-            throw new ClassException($token, '$token', Token::class);
-        }
+
+        $token = (new Token())
+            ->setCreatedAt($now)
+            ->setLastUsageAt($now);
+        $user->addToken($token)
+            ->setLastEnterAt($now);
+        $userRepository->update($user);
         return new JsonResponse($token->toArray());
     }
 }
