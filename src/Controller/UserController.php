@@ -22,12 +22,12 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 /**
  * Class UserController
  * @package App\Controller
- * @Route("/api/v1")
+ * @Route("/api/v1/user")
  */
 class UserController extends BaseController
 {
     /**
-     * @Route("/user/create", methods={"POST"}, name="user_create")
+     * @Route("/create", methods={"POST"}, name="user_create")
      * @param UserRepository $userRepository
      * @return JsonResponse
      * @throws \Exception
@@ -54,7 +54,7 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/user/register", methods={"POST"}, name="user_register")
+     * @Route("/register", methods={"POST"}, name="user_register")
      * @param Request $request
      * @param UserRepository $userRepository
      * @param ValidatorInterface $validator
@@ -136,7 +136,7 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/user/info", methods={"GET"}, name="user_info")
+     * @Route("/info", methods={"GET"}, name="user_info")
      * @return JsonResponse
      * @throws ClassException
      */
@@ -151,7 +151,7 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/user/login", methods={"POST"}, name="user_login")
+     * @Route("/login", methods={"POST"}, name="user_login")
      * @param Request $request
      * @param UserPasswordEncoderInterface $encoder
      * @return JsonResponse
@@ -164,7 +164,6 @@ class UserController extends BaseController
                           UserPasswordEncoderInterface $encoder)
     {
         $message = 'Неверный логин или пароль';
-        // Implement login without Authenticator
         $now = new \DateTime();
         $errors = [];
         $inputData = $this->convertJson($request);
@@ -192,5 +191,29 @@ class UserController extends BaseController
             ->setLastEnterAt($now);
         $userRepository->update($user);
         return new JsonResponse($token->toArray());
+    }
+
+    /**
+     * @Route("/logout", methods={"POST"}, name="user_logout")
+     * @param TokenRepository $tokenRepository
+     * @return JsonResponse
+     * @throws ClassException
+     * @throws \Exception
+     */
+    public function logout(TokenRepository $tokenRepository)
+    {
+        $user = $this->getUser();
+        if (!($user instanceof User)) {
+            throw new ClassException($user, '$user', User::class);
+        }
+        $token = $user->getCurrentToken();
+        if (!($token instanceof Token)) {
+            throw new ClassException($user, '$token', Token::class);
+        }
+        $tokenRepository->delete($token);
+
+        return new JsonResponse([
+            'success' => true
+        ]);
     }
 }

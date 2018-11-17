@@ -24,6 +24,7 @@ class ExceptionListener
         $response = new JsonResponse();
 
         $data = [
+            'success' => false,
             'message' => $exception->getMessage(),
             'code' => $exception->getCode()
         ];

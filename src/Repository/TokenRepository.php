@@ -25,9 +25,7 @@ class TokenRepository extends ServiceEntityRepository
 
     /**
      * @param Token $token
-     * @throws ORMInvalidArgumentException
-     * @throws ORMException
-     * @throws ConnectionException
+     * @throws \Exception
      */
     public function create(Token $token)
     {
@@ -35,6 +33,25 @@ class TokenRepository extends ServiceEntityRepository
         $em->getConnection()->beginTransaction(); // suspend auto-commit
         try {
             $em->persist($token);
+            $em->flush($token);
+            $em->getConnection()->commit();
+        } catch (\Exception $e) {
+            $em->getConnection()->rollBack();
+
+            throw $e;
+        }
+    }
+
+    /**
+     * @param Token $token
+     * @throws \Exception
+     */
+    public function delete(Token $token)
+    {
+        $em = $this->getEntityManager();
+        $em->getConnection()->beginTransaction(); // suspend auto-commit
+        try {
+            $em->remove($token);
             $em->flush($token);
             $em->getConnection()->commit();
         } catch (\Exception $e) {
