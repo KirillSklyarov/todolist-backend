@@ -23,7 +23,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  * @package App\Controller
  * @Route("/api/v1")
  */
-class UserController extends AbstractController
+class UserController extends BaseController
 {
     /**
      * @Route("/user/create", methods={"POST"}, name="user_create")
@@ -77,15 +77,16 @@ class UserController extends AbstractController
 
         $now = new \DateTime();
         $errors = [];
-        $username = $request->get('username');
-        $plainPassword = $request->get('password');
-        if ('string' === \gettype($username)) {
-            $user->setUsername($username);
+        $inputData = $this->convertJson($request);
+        if (\property_exists($inputData, 'username')
+            && 'string' === \gettype($inputData->username)) {
+            $user->setUsername($inputData->username);
         } else {
             $errors['username'] = ['Поле username должно присутствовать и иметь тип string'];
         }
-        if ('string' === \gettype($plainPassword)) {
-            $user->setPlainPassword($plainPassword);
+        if (property_exists($inputData, 'password')
+            && 'string' === \gettype($inputData->password)) {
+            $user->setPlainPassword($inputData->password);
         } else {
             $errors['plainPassword'] = ['Поле password должно присутствовать и иметь тип string'];
         }
