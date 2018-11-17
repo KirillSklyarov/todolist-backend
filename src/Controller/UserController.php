@@ -56,13 +56,17 @@ class UserController extends AbstractController
      * @Route("/user/register", methods={"POST"}, name="user_register")
      * @param Request $request
      * @param UserRepository $userRepository
-     * @param TokenRepository $tokenRepository
+     * @param ValidatorInterface $validator
+     * @param UserPasswordEncoderInterface $encoder
      * @return JsonResponse
+     * @throws ClassException
+     * @throws \Doctrine\DBAL\ConnectionException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \ReflectionException
      * @throws \Exception
      */
     public function register(Request $request,
                              UserRepository $userRepository,
-                             TokenRepository $tokenRepository,
                              ValidatorInterface $validator,
                              UserPasswordEncoderInterface $encoder)
     {
@@ -106,14 +110,13 @@ class UserController extends AbstractController
         $token = (new Token())
             ->setCreatedAt($now)
             ->setLastUsageAt($now)
-            ->setUser($user)
         ;
 
         $encoded = $encoder->encodePassword($user, $user->getPlainPassword());
-        $user->setPassword($encoded);
+        $user->setPassword($encoded)
+            ->clearTokens()
+            ->addToken($token);
         $userRepository->update($user);
-        $tokenRepository->create($token);
-        $tokenRepository->deleteOld($now, $user);
 
         return new JsonResponse($token->toArray());
     }
@@ -143,6 +146,8 @@ class UserController extends AbstractController
     public function login(EntityManagerInterface $em,
                           UserPasswordEncoderInterface $encoder)
     {
+        // Implement login without Authenticator
+
         $user = $this->getUser();
         if (!($user instanceof User)) {
             throw new ClassException($user, '$user', User::class);
