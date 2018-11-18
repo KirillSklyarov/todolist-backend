@@ -8,13 +8,16 @@
 
 namespace App\Controller;
 
+use App\Exception\ClassException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\Validator\ConstraintViolationInterface;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 class BaseController extends AbstractController
 {
-    public function convertJson(Request $request)
+    protected function convertJson(Request $request)
     {
         $data = \json_decode($request->getContent(), false);
         if (\json_last_error() !== JSON_ERROR_NONE) {
@@ -26,5 +29,25 @@ class BaseController extends AbstractController
         }
 
         return $data;
+    }
+
+    /**
+     * @param array $errors
+     * @param ConstraintViolationListInterface $validatorErrors
+     * @throws ClassException
+     */
+    protected function convertErrors(array &$errors,
+                                     ConstraintViolationListInterface $validatorErrors)
+    {
+        foreach ($validatorErrors as $validatorError) {
+            if (!($validatorError instanceof ConstraintViolationInterface)) {
+                throw new ClassException($validatorError, '$validatorError', ConstraintViolationInterface::class);
+            }
+            $field = $validatorError->getPropertyPath();
+            if (!\array_key_exists($field, $errors)) {
+                $errors[$field] = [];
+            }
+            $errors[$field][] = $validatorError->getMessage();
+        }
     }
 }

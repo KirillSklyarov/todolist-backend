@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Table(name="items",
@@ -34,12 +35,22 @@ class Item
 
     /**
      * @var string
+     * @Assert\Length(
+     *     min = 1,
+     *     max = 255,
+     *     minMessage="Минимальная длина заголовка 1 символ",
+     *     maxMessage="Максимальная длина заголовка 255 символа"
+     * )
      * @ORM\Column(type="string", length=255, name="title")
      */
     private $title;
 
     /**
      * @var string
+     * @Assert\Length(
+     *     max = 4000,
+     *     maxMessage="Максимальная длина описания 255 символа"
+     * )
      * @ORM\Column(type="string", length=4000, nullable=true,
      *     name="description")
      */

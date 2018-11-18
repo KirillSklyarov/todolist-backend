@@ -100,15 +100,9 @@ class UserController extends BaseController
             ->setUpdatedAt($now)
             ->setRegistredAt($now);
         $validatorErrors = $validator->validate($user);
-        foreach ($validatorErrors as $validatorError) {
-            if (!($validatorError instanceof ConstraintViolationInterface)) {
-                throw new ClassException($validatorError, '$validatorError', ConstraintViolationInterface::class);
-            }
-            $field = $validatorError->getPropertyPath();
-            if (!\array_key_exists($field, $errors)) {
-                $errors[$field] = [];
-            }
-            $errors[$field][] = $validatorError->getMessage();
+        $this->convertErrors($errors, $validatorErrors);
+        if (\count($errors) > 0) {
+            throw new ValidationException('Ошибка данных', $errors);
         }
         $existentUser = $userRepository->findOneBy(['username' => $user->getUsername()]);
         if ($existentUser) {
@@ -116,11 +110,8 @@ class UserController extends BaseController
                 $errors['username'] = [];
             }
             $errors['username'][] = 'Имя пользователя занято';
-        }
-        if (\count($errors) > 0) {
             throw new ValidationException('Ошибка данных', $errors);
         }
-
         $token = (new Token())
             ->setCreatedAt($now)
             ->setLastUsageAt($now)

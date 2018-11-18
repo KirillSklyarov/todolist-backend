@@ -31,6 +31,7 @@ class ItemController extends BaseController
      */
     public function create(Request $request, ItemRepository $itemRepository)
     {
+        // TODO: вставка между существующими
         $user = $this->getUser();
         if (!($user instanceof User)) {
             throw new ClassException($user, '$user', User::class);
