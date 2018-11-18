@@ -48,11 +48,11 @@ class ItemRepository extends ServiceEntityRepository
      */
     public function getLastPosition(User $user, \DateTime $date)
     {
-        $queryBuilder = $this->createQueryBuilder('item');
-        $queryBuilder->select('item.position')
-            ->add('where', $queryBuilder->expr()->andX(
-                $queryBuilder->expr()->eq('item.user', ':user'),
-                $queryBuilder->expr()->eq('item.date', ':date')
+        $qb = $this->createQueryBuilder('item');
+        $qb->select('item.position')
+            ->add('where', $qb->expr()->andX(
+                $qb->expr()->eq('item.user', ':user'),
+                $qb->expr()->eq('item.date', ':date')
             ))
             ->setParameters([
                 'user' => $user,
@@ -61,7 +61,7 @@ class ItemRepository extends ServiceEntityRepository
             ->orderBy('item.position', 'desc')
             ->setMaxResults(1)
         ;
-        $query = $queryBuilder->getQuery();
+        $query = $qb->getQuery();
 
         $result = $query->getOneOrNullResult();
 

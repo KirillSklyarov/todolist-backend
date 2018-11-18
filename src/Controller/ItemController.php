@@ -78,6 +78,53 @@ class ItemController extends BaseController
     }
 
     /**
+     * @Route("/read/{inputDate}/{count}/{page}", methods={"GET"},
+     *     name="item_read_items",
+     *     requirements={"count"="\d+", "count"="\d+"})
+     * @param string $inputDate
+     * @param int $page
+     * @param int $count
+     * @param ItemRepository $itemRepository
+     * @throws ClassException
+     * @throws \ReflectionException
+     * @throws \Exception
+     */
+    public function readItems(string $inputDate, int $page, int $count,
+                              ItemRepository $itemRepository)
+    {
+        $errors = [];
+        $itemsMaxResult = $this->getParameter('items.max.result');
+        if ($count > $itemsMaxResult) {
+            $errors['count'] = [\sprintf('Count must be less then %s', $itemsMaxResult)];
+        }
+        try {
+            $date = $this->createDate($inputDate);
+        } catch (ValidationException $exception) {
+            $errors['date'] = [$exception->getMessage()];
+        }
+        if (\count($errors) > 0) {
+            throw new ValidationException('Ошибка данных', $errors);
+        }
+        if (!isset($date)) {
+            throw new \Exception('Var $date does not set');
+        }
+        $start = $page * $count - $count;
+        $user = $this->getUser();
+        if (!($user instanceof User)) {
+            throw new ClassException($user, '$user', User::class);
+        }
+        $items = $itemRepository->findBy(['user' => $user, 'date' => $date],
+            ['position' => 'ASC'], $count, $start);
+        $i = $items;
+        $result = [];
+        foreach ($items as $item) {
+            $result[] = $item->toArray(true);
+        }
+        return new JsonResponse($result);
+
+    }
+
+    /**
      * @param string $inputDate
      * @return \DateTime
      * @throws ValidationException

@@ -7,6 +7,7 @@ parameters:
     locale: '%env(LOCALE)%'
     auth.no.need.routes: ['user_create', 'user_login']
     token.lifetime: '%env(TOKEN_LIFETIME)%'
+    items.max.result: '%env(ITEMS_MAX_RESULT)%'
 
 services:
     # default configuration for services in *this* file
