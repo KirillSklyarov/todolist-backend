@@ -10,7 +10,10 @@ use App\Repository\ItemRepository;
 use DateTimeZone;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * Class ItemController
@@ -85,6 +88,7 @@ class ItemController extends BaseController
      * @param int $page
      * @param int $count
      * @param ItemRepository $itemRepository
+     * @return JsonResponse
      * @throws ClassException
      * @throws \ReflectionException
      * @throws \Exception
@@ -115,13 +119,32 @@ class ItemController extends BaseController
         }
         $items = $itemRepository->findBy(['user' => $user, 'date' => $date],
             ['position' => 'ASC'], $count, $start);
-        $i = $items;
         $result = [];
         foreach ($items as $item) {
             $result[] = $item->toArray(true);
         }
         return new JsonResponse($result);
 
+    }
+
+
+    /**
+     * @Route("/delete/{uuid}", methods={"POST"}, name="item_delete",
+     *     requirements={"uuid" = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"})
+     * @param string $uuid
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function delete(string $uuid, ItemRepository $itemRepository, UserInterface $user)
+    {
+        $uuid = \strtolower($uuid);
+        $item = $itemRepository->findOneBy(['uuid' => $uuid, 'user' => $user]);
+        if (!$item) {
+            throw new NotFoundHttpException(\sprintf('Item uuid "%s" not found', $uuid));
+        }
+        $itemRepository->delete($item);
+
+        return new JsonResponse(['success' => true]);
     }
 
     /**

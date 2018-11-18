@@ -41,6 +41,25 @@ class ItemRepository extends ServiceEntityRepository
     }
 
     /**
+     * @param Item $item
+     * @throws \Exception
+     */
+    public function delete(Item $item)
+    {
+        $em = $this->getEntityManager();
+        $em->getConnection()->beginTransaction(); // suspend auto-commit
+        try {
+            $em->remove($item);
+            $em->flush($item);
+            $em->getConnection()->commit();
+        } catch (\Exception $e) {
+            $em->getConnection()->rollBack();
+
+            throw $e;
+        }
+    }
+
+    /**
      * @param User $user
      * @param \DateTime $date
      * @return mixed
