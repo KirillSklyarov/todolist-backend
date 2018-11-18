@@ -46,7 +46,7 @@ class Item
     private $description;
 
     /**
-     * @var \DateTimeInterface
+     * @var \DateTime
      * @ORM\Column(type="date", name="date")
      */
     private $date;
@@ -63,6 +63,11 @@ class Item
      *     nullable=false, onDelete="CASCADE")
      */
     private $user;
+
+    /**
+     * @ORM\Column(type="datetime")
+     */
+    private $updatedAt;
 
     /**
      * Item constructor.
@@ -126,12 +131,12 @@ class Item
         return $this;
     }
 
-    public function getDate(): \DateTimeInterface
+    public function getDate(): \DateTime
     {
         return $this->date;
     }
 
-    public function setDate(\DateTimeInterface $date): self
+    public function setDate(\DateTime $date): self
     {
         $this->date = $date;
 
@@ -162,5 +167,29 @@ class Item
         return $this;
     }
 
+    public function getUpdatedAt(): \DateTime
+    {
+        return $this->updatedAt;
+    }
 
+    public function setUpdatedAt(\DateTime $updatedAt): self
+    {
+        $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+    public function toArray(bool $full = false): array
+    {
+        $data = [
+            'uuid' => $this->getUuid(),
+            'position' => $this->getPosition()
+        ];
+        if ($full) {
+            $data['title'] = $this->getTitle();
+            $data['date'] = $this->getDate()->format('c');
+            $data['description'] = $this->getDescription();
+        }
+        return $data;
+    }
 }

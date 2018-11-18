@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Item;
+use App\Entity\User;
+use App\Exception\ClassException;
 use App\Exception\ValidationException;
 use App\Repository\ItemRepository;
 use DateTimeZone;
@@ -22,13 +24,17 @@ class ItemController extends BaseController
      * @Route("/create", methods={"POST"}, name="item_create")
      * @param Request $request
      * @param ItemRepository $itemRepository
-     * @return void
+     * @return JsonResponse
      * @throws \App\Exception\ClassException
      * @throws \ReflectionException
      * @throws \Exception
      */
     public function create(Request $request, ItemRepository $itemRepository)
     {
+        $user = $this->getUser();
+        if (!($user instanceof User)) {
+            throw new ClassException($user, '$user', User::class);
+        }
         $now = new \DateTime();
         $errors = [];
         $inputData = $this->convertJson($request);
@@ -57,10 +63,17 @@ class ItemController extends BaseController
         if (\count($errors) > 0) {
             throw new ValidationException('Ошибка данных', $errors);
         }
-        $item = (new Item())
+        $item->setUser($user)
             ->setCreatedAt($now)
-//            ->setDate()
+            ->setUpdatedAt($now)
+            ->setTitle($inputData->title)
+            ->setDescription($inputData->description)
         ;
+        $lastPosition = $itemRepository->getLastPosition($user, $item->getDate());
+        $item->setPosition(null === $lastPosition ? 0 : $lastPosition + 1);
+        $itemRepository->create($item);
+
+        return new JsonResponse($item->toArray());
     }
 
     /**
@@ -72,10 +85,10 @@ class ItemController extends BaseController
     private function createDate(string $inputDate)
     {
         $patternCheck = \preg_match(self::DATE_PATTERN, $inputDate);
-        $message = 'Дата не соответствует шаблону';
         if (false === $patternCheck) {
             throw new \Exception('preg_match error');
         }
+        $message = 'Дата не соответствует шаблону';
         if (0 === $patternCheck) {
             throw new ValidationException($message);
         }
@@ -84,6 +97,7 @@ class ItemController extends BaseController
         } catch (\Exception $exception) {
             throw new ValidationException($message);
         }
+
         return $date;
     }
 }
