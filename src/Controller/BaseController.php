@@ -23,8 +23,7 @@ class BaseController extends AbstractController
     const MESSAGE_MAX_LENGHT = 'maxLenght';
     const MESSAGE_PATTERN = 'regexp';
     const MESSAGE_DATE = 'date';
-
-//    const MESSAGE_INTEGER =
+    const MESSAGE_INTEGER = 'integer';
 
     protected function convertJson(Request $request)
     {
@@ -92,11 +91,15 @@ class BaseController extends AbstractController
         if (\array_key_exists('position', $input)) {
             $collection['position'] = [
                 new Assert\Optional(),
-                new Assert\Type(['type' => 'integer'])
+                new Assert\Type([
+                    'type' => 'integer',
+                    'message' => self::MESSAGE_INTEGER
+                ])
             ];
         }
         $constraint = new Assert\Collection($collection);
         $violations = $validator->validate($input, $constraint);
+        
         return $violations;
     }
 

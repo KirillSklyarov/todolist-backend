@@ -8,6 +8,7 @@
 
 namespace App\EventListener;
 
+use App\Exception\ClassException;
 use App\Exception\ValidationException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
@@ -23,11 +24,11 @@ class ExceptionListener
 
         $response = new JsonResponse();
 
+        // TODO Set message only in dev inv
         $data = [
             'message' => $exception->getMessage(),
             'code' => $exception->getCode()
         ];
-
 
         // HttpExceptionInterface is a special type of exception that
         // holds status code and header details
@@ -35,7 +36,11 @@ class ExceptionListener
             $response->setStatusCode($exception->getStatusCode());
             $response->headers->replace($exception->getHeaders());
             if ($exception instanceof ValidationException) {
-                $data['errors'] = $exception->getErrors();
+                try {
+                    $data['errors'] = $exception->getErrors();
+                } catch (ClassException $classException) {
+                    $response->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+                }
             }
         } else {
             $response->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);

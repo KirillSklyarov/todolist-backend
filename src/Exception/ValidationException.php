@@ -11,25 +11,26 @@ namespace App\Exception;
 
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Validator\ConstraintViolationInterface;
+use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 class ValidationException extends BadRequestHttpException
 {
-
-    private $errors = [];
+    /**
+     * @var ConstraintViolationListInterface
+     */
+    private $errors;
 
     /**
      * ValidationException constructor.
+     * @param ConstraintViolationListInterface $errors
      * @param string|null $message
-     * @param null|ConstraintViolationListInterface $errors
      * @param \Exception|null $previous
      * @param int $code
      * @param array $headers
-     * @throws ClassException
-     * @throws \ReflectionException
      */
-    public function __construct(string $message = null,
-                                $errors = [],
+    public function __construct(ConstraintViolationListInterface $errors,
+                                string $message = null,
                                 \Exception $previous = null,
                                 int $code = 0,
                                 array $headers = array())
@@ -38,8 +39,24 @@ class ValidationException extends BadRequestHttpException
         parent::__construct($message, $previous, $code, $headers);
     }
 
+    /**
+     * @return array
+     * @throws ClassException
+     */
     public function getErrors()
     {
-        return $this->errors;
+        $errorData = [];
+        foreach ($this->errors as $error) {
+            if (!($error instanceof ConstraintViolationInterface)) {
+                throw new ClassException($error, '$error', ConstraintViolationInterface::class);
+            }
+            $field = $error->getPropertyPath();
+            if (!\array_key_exists($field, $errorData)) {
+                $errorData[$field] = [];
+            }
+            $errorData[$field][] = $error->getMessage();
+        }
+        
+        return $errorData;
     }
 }

@@ -40,39 +40,19 @@ class ItemController extends BaseController
             throw new ClassException($user, '$user', User::class);
         }
         $now = new \DateTime();
-        $errors = [];
         $inputData = $this->convertJson($request);
         $errors = $this->validateItem($inputData);
-        if (!(\property_exists($inputData, 'title')
-            && 'string' === \gettype($inputData->title))) {
-            $errors['title'] = ['Поле title должно присутствовать и иметь тип string'];
-        }
-        if (!(property_exists($inputData, 'description')
-            && 'string' === \gettype($inputData->description))) {
-            $errors['description'] = ['Поле description должно присутствовать и иметь тип string'];
-        }
-        if (property_exists($inputData, 'position') &&
-            !('integer' === \gettype($inputData->position) ||
-            'NULL' === \gettype($inputData->position))
-        ) {
-            $errors['position'] = ['Поле position должно присутствовать и иметь тип integer или null'];
-        }
-        $item = new Item();
-        try {
-            $date = $this->createDate($inputData->date);
-            $item->setDate($date);
-        } catch (ValidationException $exception) {
-            $errors['date'] = $exception->getMessage();
-        }
-
         if (\count($errors) > 0) {
-            throw new ValidationException('Ошибка данных', $errors);
+            throw new ValidationException($errors, 'Input date error');
         }
-        $item->setUser($user)
+        $date = new \DateTime($inputData['date'], new DateTimeZone('UTC'));
+        $item = (new Item())
+            ->setUser($user)
             ->setCreatedAt($now)
             ->setUpdatedAt($now)
-            ->setTitle($inputData->title)
-            ->setDescription($inputData->description)
+            ->setTitle($inputData['title'])
+            ->setDescription($inputData['description'])
+            ->setDate($date)
         ;
         $lastPosition = $itemRepository->getLastPosition($user, $item->getDate());
         $item->setPosition(null === $lastPosition ? 0 : $lastPosition + 1);
