@@ -42,6 +42,7 @@ class ItemController extends BaseController
         $now = new \DateTime();
         $errors = [];
         $inputData = $this->convertJson($request);
+        $errors = $this->validateItem($inputData);
         if (!(\property_exists($inputData, 'title')
             && 'string' === \gettype($inputData->title))) {
             $errors['title'] = ['Поле title должно присутствовать и иметь тип string'];
@@ -127,6 +128,10 @@ class ItemController extends BaseController
 
     }
 
+    public function update()
+    {
+
+    }
 
     /**
      * @Route("/delete/{uuid}", methods={"POST"}, name="item_delete",
@@ -140,7 +145,7 @@ class ItemController extends BaseController
         $uuid = \strtolower($uuid);
         $item = $itemRepository->findOneBy(['uuid' => $uuid, 'user' => $user]);
         if (!$item) {
-            throw new NotFoundHttpException(\sprintf('Item uuid "%s" not found', $uuid));
+            throw new NotFoundHttpException(\sprintf('Item uuid %s not found', $uuid));
         }
         $itemRepository->delete($item);
 
