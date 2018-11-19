@@ -10,6 +10,8 @@ namespace App\Security;
 
 use App\Entity\Token;
 use App\Entity\User;
+use App\Repository\TokenRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,18 +32,22 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
         'user_create',
         'user_login'
     ];
-
-    const TOKEN_LIFITIME = 'P30D';
-
-    /**
-     * @var EntityManagerInterface
-     */
-    private $em;
+    const TOKEN_NOT_FOUND = 'Token not found';
 
     /**
      * @var ParameterBagInterface
      */
     private $bag;
+
+    /**
+     * @var TokenRepository
+     */
+    private $tokenRepository;
+
+    /**
+     * @var UserRepository
+     */
+    private $userRepository;
 
     /**
      * @var string
@@ -54,11 +60,13 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
     private $code = 1;
 
     public function __construct(ParameterBagInterface $bag,
-                                EntityManagerInterface $em
-                                )
+                                TokenRepository $tokenRepository,
+                                UserRepository $userRepository
+    )
     {
-        $this->em = $em;
         $this->bag = $bag;
+        $this->tokenRepository = $tokenRepository;
+        $this->userRepository = $userRepository;
     }
 
     /**
@@ -96,11 +104,9 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
             $this->message = 'Token is requered';
             return null;
         }
-
-        $token = $this->em->getRepository(Token::class)
-            ->findOneBy(['uuid' => $userToken]);
+        $token = $this->tokenRepository->findOneBy(['uuid' => $userToken]);
         if (null === $token) {
-            $this->message = 'Token not found';
+            $this->message = self::TOKEN_NOT_FOUND;
             return null;
         }
         $expiredAt = clone $token->getCreatedAt();
@@ -108,11 +114,16 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
         $expiredAt->add($interval);
         $now = new \DateTime();
         if ($expiredAt <= $now) {
-            $this->message = 'Token is expired';
+            $this->message = self::TOKEN_NOT_FOUND;
             return null;
         }
+        $token->setLastUsageAt($now);
         $user = $token->getUser();
-        $user->setCurrentToken($token);
+        $user->setCurrentToken($token)
+            ->setLastEnterAt($now)
+        ;
+        $this->tokenRepository->update($token);
+        $this->userRepository->update($user);
         return $user;
     }
 

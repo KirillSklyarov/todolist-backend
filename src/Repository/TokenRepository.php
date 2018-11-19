@@ -46,6 +46,25 @@ class TokenRepository extends ServiceEntityRepository
      * @param Token $token
      * @throws \Exception
      */
+    public function update(Token $token)
+    {
+        $em = $this->getEntityManager();
+        $em->getConnection()->beginTransaction(); // suspend auto-commit
+        try {
+            $em->merge($token);
+            $em->flush($token);
+            $em->getConnection()->commit();
+        } catch (\Exception $e) {
+            $em->getConnection()->rollBack();
+
+            throw $e;
+        }
+    }
+
+    /**
+     * @param Token $token
+     * @throws \Exception
+     */
     public function delete(Token $token)
     {
         $em = $this->getEntityManager();

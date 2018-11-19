@@ -14,6 +14,9 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
+use Symfony\Component\Validator\Validation;
 
 /**
  * Class ItemController
@@ -22,7 +25,50 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 class ItemController extends BaseController
 {
-    const DATE_PATTERN = '#^\d{4}-\d{2}-\d{2}#';
+    /**
+     * @param array $input
+     * @return ConstraintViolationListInterface
+     */
+    public static function validate(array $input): ConstraintViolationListInterface
+    {
+        $validator = Validation::createValidator();
+        $collection = [
+            'title' => [
+                new Assert\Length([
+                    'min' => 1,
+                    'minMessage' => self::MESSAGE_MIN_LENGHT,
+                    'max' => 255,
+                    'maxMessage' => self::MESSAGE_MAX_LENGHT
+                ])
+            ],
+            'description' => [
+                new Assert\Optional(),
+                new Assert\Length([
+                    'max' => 4000,
+                    'minMessage' => self::MESSAGE_MIN_LENGHT
+                ])
+            ],
+            'date' => [
+                new Assert\Date([
+                    'message' => self::MESSAGE_DATE
+                ])
+            ]
+        ];
+        if (\array_key_exists('position', $input)) {
+            $collection['position'] = [
+                new Assert\Optional(),
+                new Assert\Type([
+                    'type' => 'integer',
+                    'message' => self::MESSAGE_INTEGER
+                ])
+            ];
+        }
+        $constraint = new Assert\Collection($collection);
+        $violations = $validator->validate($input, $constraint);
+
+        return $violations;
+    }
+
     /**
      * @Route("/create", methods={"POST"}, name="item_create")
      * @param Request $request
@@ -41,9 +87,9 @@ class ItemController extends BaseController
         }
         $now = new \DateTime();
         $inputData = $this->convertJson($request);
-        $errors = $this->validateItem($inputData);
+        $errors = self::validate($inputData);
         if (\count($errors) > 0) {
-            throw new ValidationException($errors, 'Input date error');
+            throw new ValidationException($errors, self::INPUT_DATA_ERROR);
         }
         $date = new \DateTime($inputData['date'], new DateTimeZone('UTC'));
         $item = (new Item())
@@ -52,8 +98,7 @@ class ItemController extends BaseController
             ->setUpdatedAt($now)
             ->setTitle($inputData['title'])
             ->setDescription($inputData['description'])
-            ->setDate($date)
-        ;
+            ->setDate($date);
         $lastPosition = $itemRepository->getLastPosition($user, $item->getDate());
         $item->setPosition(null === $lastPosition ? 0 : $lastPosition + 1);
         $itemRepository->create($item);
@@ -130,30 +175,5 @@ class ItemController extends BaseController
         $itemRepository->delete($item);
 
         return new JsonResponse(['success' => true]);
-    }
-
-    /**
-     * @param string $inputDate
-     * @return \DateTime
-     * @throws ValidationException
-     * @throws \Exception
-     */
-    private function createDate(string $inputDate)
-    {
-        $patternCheck = \preg_match(self::DATE_PATTERN, $inputDate);
-        if (false === $patternCheck) {
-            throw new \Exception('preg_match error');
-        }
-        $message = 'Дата не соответствует шаблону';
-        if (0 === $patternCheck) {
-            throw new ValidationException($message);
-        }
-        try {
-            $date = new \DateTime($inputDate, new DateTimeZone('UTC'));
-        } catch (\Exception $exception) {
-            throw new ValidationException($message);
-        }
-
-        return $date;
     }
 }

@@ -30,19 +30,6 @@ class User implements UserInterface
 
     /**
      * @var string
-     * @Assert\NotBlank(
-     *     message="Поле username должно присутствовать и иметь тип string"
-     * )
-     * @Assert\Length(
-     *     min = 2,
-     *     max = 32,
-     *     minMessage="Минимальная длина логина 2 символа",
-     *     maxMessage="Максимальная длина логина 32 символа"
-     * )
-     * @Assert\Regex(
-     *     pattern="/^[\w.\-]+$/",
-     *     message="Допустимые символы в логине: латинские строчные и заглавные буквы, арабские цифры, набор спецсимволов: -._"
-     * )
      * @ORM\Column(type="string", length=180, unique=true, name="username")
      */
     private $username;
@@ -54,18 +41,6 @@ class User implements UserInterface
 
     /**
      * @var string|null
-     * @Assert\NotBlank(
-     *     message="Поле password должно присутствовать и иметь тип string"
-     * )
-     * @Assert\Length(
-     *     min = 1,
-     *     max = 4096,
-     *     maxMessage="Максимальная длина пароля 4096 символов"
-     * )
-     * @Assert\Regex(
-     *     pattern="/^[\w!@#$%^&*()<>\-=+.,.?]+$/",
-     *     message="Допустимые символы в пароле: латинские строчные и заглавные буквы, арабские цифры, набор спецсимволов: @#$%^&*()<>-=+.,.?"
-     * )
      */
     private $plainPassword;
 

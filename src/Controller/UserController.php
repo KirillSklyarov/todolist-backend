@@ -13,10 +13,14 @@ use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\ConstraintViolationInterface;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
+use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
@@ -26,6 +30,40 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  */
 class UserController extends BaseController
 {
+
+    public static function validate(array $input): ConstraintViolationListInterface
+    {
+        $validator = Validation::createValidator();
+        $collection = [
+            'username' => [
+                new Assert\Length([
+                    'min' => 2,
+                    'minMessage' => self::MESSAGE_MIN_LENGHT,
+                    'max' => 32,
+                    'maxMessage' => self::MESSAGE_MAX_LENGHT
+                ]),
+                new Assert\Regex([
+                    'pattern' => '/^[\w.\-]+$/',
+                    'message' => self::MESSAGE_PATTERN
+                ])
+            ],
+            'password' => [
+                new Assert\Length([
+                    'max' => 64,
+                    'maxMessage' => self::MESSAGE_MAX_LENGHT
+                ]),
+                new Assert\Regex([
+                    'pattern' => '/^[\w!@#$%^&*()<>\-=+.,.?]+$/',
+                    'message' => self::MESSAGE_PATTERN
+                ])
+            ]
+        ];
+        $constraint = new Assert\Collection($collection);
+        $violations = $validator->validate($input, $constraint);
+
+        return $violations;
+    }
+
     /**
      * @Route("/create", methods={"POST"}, name="user_create")
      * @param UserRepository $userRepository
@@ -37,16 +75,14 @@ class UserController extends BaseController
         $now = new \DateTime();
         $token = (new Token())
             ->setCreatedAt($now)
-            ->setLastUsageAt($now)
-        ;
+            ->setLastUsageAt($now);
         $user = (new User())
             ->addToken($token)
             ->addRole(User::ROLE_UNREGISTRED_USER)
             ->setPermanent(false)
             ->setCreatedAt($now)
             ->setUpdatedAt($now)
-            ->setLastEnterAt($now)
-        ;
+            ->setLastEnterAt($now);
 
         $userRepository->create($user);
 
@@ -76,51 +112,33 @@ class UserController extends BaseController
             throw new ClassException($user, '$user', User::class);
         }
 
-        $now = new \DateTime();
-        $errors = [];
         $inputData = $this->convertJson($request);
-        if (\property_exists($inputData, 'username')
-            && 'string' === \gettype($inputData->username)) {
-            $user->setUsername($inputData->username);
-        } else {
-            $errors['username'] = ['Поле username должно присутствовать и иметь тип string'];
-        }
-        if (property_exists($inputData, 'password')
-            && 'string' === \gettype($inputData->password)) {
-            $user->setPlainPassword($inputData->password);
-        } else {
-            $errors['plainPassword'] = ['Поле password должно присутствовать и иметь тип string'];
-        }
+        $errors = self::validate($inputData);
+
         if (\count($errors) > 0) {
-            throw new ValidationException('Ошибка данных', $errors);
+            throw new ValidationException($errors, self::INPUT_DATA_ERROR);
         }
-        $user->removeRole(User::ROLE_UNREGISTRED_USER)
-            ->addRole(User::ROLE_REGISTRED_USER)
-            ->setPermanent(true)
-            ->setUpdatedAt($now)
-            ->setRegistredAt($now);
-        $validatorErrors = $validator->validate($user);
-        $this->convertErrors($errors, $validatorErrors);
-        if (\count($errors) > 0) {
-            throw new ValidationException('Ошибка данных', $errors);
-        }
-        $existentUser = $userRepository->findOneBy(['username' => $user->getUsername()]);
+        $existentUser = $userRepository->findOneBy(['username' => $inputData['username']]);
         if ($existentUser) {
-            if (!\array_key_exists('username', $errors)) {
-                $errors['username'] = [];
-            }
-            $errors['username'][] = 'Имя пользователя занято';
-            throw new ValidationException('Ошибка данных', $errors);
+            throw new BadRequestHttpException('Username is existing');
         }
+        $now = new \DateTime();
         $token = (new Token())
             ->setCreatedAt($now)
-            ->setLastUsageAt($now)
-        ;
-
-        $encoded = $encoder->encodePassword($user, $user->getPlainPassword());
-        $user->setPassword($encoded)
+            ->setLastUsageAt($now);
+        $encoded = $encoder->encodePassword($user, $inputData['password']);
+        $user->setUsername($inputData['username'])
+            ->setPlainPassword($inputData['password'])
+            ->setPassword($encoded)
+            ->removeRole(User::ROLE_UNREGISTRED_USER)
+            ->addRole(User::ROLE_REGISTRED_USER)
             ->clearTokens()
-            ->addToken($token);
+            ->addToken($token)
+            ->setPermanent(true)
+            ->setUpdatedAt($now)
+            ->setRegistredAt($now)
+            ->setLastEnterAt($now)
+        ;
         $userRepository->update($user);
 
         return new JsonResponse($token->toArray());
@@ -144,43 +162,37 @@ class UserController extends BaseController
     /**
      * @Route("/login", methods={"POST"}, name="user_login")
      * @param Request $request
+     * @param UserRepository $userRepository
      * @param UserPasswordEncoderInterface $encoder
      * @return JsonResponse
-     * @throws ClassException
-     * @throws \ReflectionException
+     * @throws \Doctrine\DBAL\ConnectionException
+     * @throws \Doctrine\ORM\ORMException
      * @throws \Exception
      */
     public function login(Request $request,
                           UserRepository $userRepository,
                           UserPasswordEncoderInterface $encoder)
     {
-        $message = 'Неверный логин или пароль';
         $now = new \DateTime();
-        $errors = [];
         $inputData = $this->convertJson($request);
-        if (!(\property_exists($inputData, 'username')
-            && 'string' === \gettype($inputData->username))) {
-            $errors['username'] = ['Поле username должно присутствовать и иметь тип string'];
-        }
-        if (!(property_exists($inputData, 'password')
-            && 'string' === \gettype($inputData->password))) {
-            $errors['plainPassword'] = ['Поле password должно присутствовать и иметь тип string'];
-        }
+        $errors = self::validate($inputData);
         if (\count($errors) > 0) {
-            throw new ValidationException('Ошибка данных', $errors);
+            throw new ValidationException($errors, self::INPUT_DATA_ERROR);
         }
 
-        $user = $userRepository->findOneBy(['username' => $inputData->username]);
-        if (!$user || !$encoder->isPasswordValid($user, $inputData->password)) {
-            throw new UnauthorizedHttpException('Bearer', $message);
+        $user = $userRepository->findOneBy(['username' => $inputData['username']]);
+        if (!$user || !$encoder->isPasswordValid($user, $inputData['password'])) {
+            throw new UnauthorizedHttpException('Bearer', 'Wrong username or password');
         }
-
         $token = (new Token())
             ->setCreatedAt($now)
             ->setLastUsageAt($now);
         $user->addToken($token)
-            ->setLastEnterAt($now);
+            ->setLastEnterAt($now)
+            ->setCurrentToken($token)
+        ;
         $userRepository->update($user);
+
         return new JsonResponse($token->toArray());
     }
 

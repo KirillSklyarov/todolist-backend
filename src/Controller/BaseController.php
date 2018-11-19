@@ -19,6 +19,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class BaseController extends AbstractController
 {
+    const INPUT_DATA_ERROR = 'Input data error';
     const MESSAGE_MIN_LENGHT = 'minLenght';
     const MESSAGE_MAX_LENGHT = 'maxLenght';
     const MESSAGE_PATTERN = 'regexp';
@@ -56,53 +57,6 @@ class BaseController extends AbstractController
 
         return $violations;
     }
-
-    protected function validateItem($input)
-    {
-        $validator = Validation::createValidator();
-        $collection = [
-            'title' => [
-                new Assert\Length(
-                    [
-                        'min' => 1,
-                        'minMessage' => self::MESSAGE_MIN_LENGHT,
-                        'max' => 255,
-                        'maxMessage' => self::MESSAGE_MAX_LENGHT
-                    ]
-                )
-            ],
-            'description' => [
-                new Assert\Optional(),
-                new Assert\Length(
-                    [
-                        'max' => 4000,
-                        'minMessage' => self::MESSAGE_MIN_LENGHT
-                    ]
-                )
-            ],
-            'date' => [
-                new Assert\Date(
-                    [
-                        'message' => self::MESSAGE_DATE
-                    ]
-                )
-            ]
-        ];
-        if (\array_key_exists('position', $input)) {
-            $collection['position'] = [
-                new Assert\Optional(),
-                new Assert\Type([
-                    'type' => 'integer',
-                    'message' => self::MESSAGE_INTEGER
-                ])
-            ];
-        }
-        $constraint = new Assert\Collection($collection);
-        $violations = $validator->validate($input, $constraint);
-        
-        return $violations;
-    }
-
 
     /**
      * @param array $errors

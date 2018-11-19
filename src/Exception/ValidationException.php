@@ -50,13 +50,14 @@ class ValidationException extends BadRequestHttpException
             if (!($error instanceof ConstraintViolationInterface)) {
                 throw new ClassException($error, '$error', ConstraintViolationInterface::class);
             }
-            $field = $error->getPropertyPath();
+            $propertyPath = $error->getPropertyPath();
+            $field = \substr($propertyPath, 1, \mb_strlen($propertyPath) - 2);
             if (!\array_key_exists($field, $errorData)) {
                 $errorData[$field] = [];
             }
             $errorData[$field][] = $error->getMessage();
         }
-        
+
         return $errorData;
     }
 }
