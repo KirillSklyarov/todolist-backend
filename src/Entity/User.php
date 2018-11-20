@@ -30,6 +30,12 @@ class User implements UserInterface
 
     /**
      * @var string
+     * @ORM\Column(type="string", length=36)
+     */
+    private $uuid;
+
+    /**
+     * @var string
      * @ORM\Column(type="string", length=180, unique=true, name="username")
      */
     private $username;
@@ -106,7 +112,8 @@ class User implements UserInterface
      */
     public function __construct()
     {
-        $this->username = Uuid::uuid4();
+        $this->uuid = Uuid::uuid4();
+        $this->username = $this->getUuid();
         $this->tokens = new ArrayCollection();
         $this->items = new ArrayCollection();
     }
@@ -114,6 +121,11 @@ class User implements UserInterface
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getUuid(): string
+    {
+        return $this->uuid;
     }
 
     /**
@@ -335,6 +347,7 @@ class User implements UserInterface
     public function toArray()
     {
         return [
+            'uuid' => $this->getUuid(),
             'username' => $this->getUsername(),
 //            'createdAt' => $this->getCreatedAt()->format('c'),
 //            'updatedAt' => $this->getUpdatedAt()->format('c'),
