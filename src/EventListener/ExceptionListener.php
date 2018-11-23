@@ -10,6 +10,9 @@ namespace App\EventListener;
 
 use App\Exception\ClassException;
 use App\Exception\ValidationException;
+use App\Model\ApiResponse;
+use App\Model\Error;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,37 +20,44 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class ExceptionListener
 {
+    /**
+     * @var ContainerInterface
+     */
+    private $container;
+
+    public function __construct(ContainerInterface $container)
+    {
+        $this->container = $container;
+    }
+
     public function onKernelException(GetResponseForExceptionEvent $event)
     {
-        // You get the exception object from the received event
         $exception = $event->getException();
-
-        $response = new JsonResponse();
-
-        // TODO Set message only in dev inv
-        $data = [
-            'message' => $exception->getMessage(),
-            'code' => $exception->getCode()
-        ];
-
-        // HttpExceptionInterface is a special type of exception that
-        // holds status code and header details
-        if ($exception instanceof HttpExceptionInterface) {
-            $response->setStatusCode($exception->getStatusCode());
-            $response->headers->replace($exception->getHeaders());
-            if ($exception instanceof ValidationException) {
-                try {
-                    $data['errors'] = $exception->getErrors();
-                } catch (ClassException $classException) {
-                    $response->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+        try {
+            // TODO logger
+            $error = (new Error())->setCode($exception->getCode());
+            if ($exception instanceof HttpExceptionInterface) {
+                $error->setMessage($exception->getMessage());
+                if ($exception instanceof ValidationException) {
+                    $error->setValidationErrors($exception->getErrors());
                 }
+            } elseif ($this->container->get('kernel')->getEnvironment() === 'dev') {
+                $error->setMessage($exception->getMessage());
             }
-        } else {
-            $response->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+            $apiResponse = new ApiResponse(null, $error, false);
+            $event->setResponse($apiResponse);
+        } catch (\Exception $exception) {
+            $jsonResponse = new JsonResponse(
+                [
+                    'success' => false,
+                    'error' => [
+                        'code' => 500,
+                        'message' => Response::$statusTexts[500],
+                    ],
+                    'data' => null
+                ]
+            );
+            $event->setResponse($jsonResponse);
         }
-        $response->setData(
-            $data
-        );
-        $event->setResponse($response);
     }
 }

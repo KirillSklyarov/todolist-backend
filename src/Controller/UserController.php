@@ -6,6 +6,7 @@ use App\Entity\Token;
 use App\Entity\User;
 use App\Exception\ClassException;
 use App\Exception\ValidationException;
+use App\Model\ApiResponse;
 use App\Repository\TokenRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -86,7 +87,7 @@ class UserController extends BaseController
 
         $userRepository->create($user);
 
-        return new JsonResponse($token->toArray());
+        return new ApiResponse($token->toArray());
     }
 
     /**
@@ -141,7 +142,7 @@ class UserController extends BaseController
         ;
         $userRepository->update($user);
 
-        return new JsonResponse($token->toArray());
+        return new ApiResponse($token->toArray());
     }
 
     /**
@@ -155,7 +156,7 @@ class UserController extends BaseController
         if (!($user instanceof User)) {
             throw new ClassException($user, '$user', User::class);
         }
-        return new JsonResponse($user->toArray());
+        return new ApiResponse($user->toArray());
 
     }
 
@@ -193,7 +194,7 @@ class UserController extends BaseController
         ;
         $userRepository->update($user);
 
-        return new JsonResponse($token->toArray());
+        return new ApiResponse($token->toArray());
     }
 
     /**
@@ -215,8 +216,6 @@ class UserController extends BaseController
         }
         $tokenRepository->delete($token);
 
-        return new JsonResponse([
-            'success' => true
-        ]);
+        return new ApiResponse(null);
     }
 }

@@ -9,6 +9,7 @@
 namespace App\Exception;
 
 
+use App\Model\ValidationError;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Validator\ConstraintViolationInterface;
 use Symfony\Component\Validator\ConstraintViolationList;
@@ -26,38 +27,48 @@ class ValidationException extends BadRequestHttpException
      * @param ConstraintViolationListInterface $errors
      * @param string|null $message
      * @param \Exception|null $previous
-     * @param int $code
-     * @param array $headers
      */
     public function __construct(ConstraintViolationListInterface $errors,
                                 string $message = null,
-                                \Exception $previous = null,
-                                int $code = 0,
-                                array $headers = array())
+                                \Exception $previous = null)
     {
         $this->errors = $errors;
-        parent::__construct($message, $previous, $code, $headers);
+        parent::__construct($message, $previous, 400, []);
     }
 
     /**
-     * @return array
+     * @return ValidationError[]
      * @throws ClassException
      */
-    public function getErrors()
+    public function getErrors(): array
     {
-        $errorData = [];
+        $validationErrors = [];
         foreach ($this->errors as $error) {
             if (!($error instanceof ConstraintViolationInterface)) {
                 throw new ClassException($error, '$error', ConstraintViolationInterface::class);
             }
             $propertyPath = $error->getPropertyPath();
             $field = \substr($propertyPath, 1, \mb_strlen($propertyPath) - 2);
-            if (!\array_key_exists($field, $errorData)) {
-                $errorData[$field] = [];
+            $found = \array_filter($validationErrors,
+                function ($validationError) use ($field) {
+                    if (!($validationError instanceof ValidationError)) {
+                        throw new ClassException($validationError, '$validationError', ValidationError::class);
+                    }
+                    return $validationError->getField() === $field;
+                });
+            if (count($found) === 0) {
+                $validationErrors[] = (new ValidationError())
+                    ->setField($field)
+                    ->addError($error->getMessage());
+            } else {
+                $validationError = current($found);
+                if (!($validationError instanceof ValidationError)) {
+                    throw new ClassException($validationError, '$validationError', ValidationError::class);
+                }
+                $validationError->addError($error->getMessage());
             }
-            $errorData[$field][] = $error->getMessage();
         }
 
-        return $errorData;
+        return $validationErrors;
     }
 }

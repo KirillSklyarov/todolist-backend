@@ -8,13 +8,17 @@
 
 namespace App\EventListener;
 
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
 
 class ResponseListener
 {
     public function onKernelResponse(FilterResponseEvent $event)
     {
-        $responseHeaders = $event->getResponse()->headers;
+        // TODO implement log
+        $response = $event->getResponse();
+        $response->setStatusCode(200);
+        $responseHeaders = $response->headers;
 
         $responseHeaders->set('Access-Control-Allow-Headers', 'origin, content-type, accept, x-auth-token');
         $responseHeaders->set('Access-Control-Allow-Origin', '*');
