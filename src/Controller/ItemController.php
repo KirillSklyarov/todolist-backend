@@ -6,6 +6,7 @@ use App\Entity\Item;
 use App\Entity\User;
 use App\Exception\ClassException;
 use App\Exception\ValidationException;
+use App\Model\ApiResponse;
 use App\Repository\ItemRepository;
 use DateTimeZone;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -29,7 +30,7 @@ class ItemController extends BaseController
      * @param array $input
      * @return ConstraintViolationListInterface
      */
-    public static function validate(array $input): ConstraintViolationListInterface
+    public function validatePost(array $input): ConstraintViolationListInterface
     {
         $validator = Validation::createValidator();
         $collection = [
@@ -69,6 +70,28 @@ class ItemController extends BaseController
         return $violations;
     }
 
+    public function validateGet(array $input)
+    {
+        $validator = Validation::createValidator();
+        $collection = [
+            'date' => [
+                new Assert\Date([
+                    'message' => self::MESSAGE_DATE
+                ])
+            ],
+            'count' => [
+                new Assert\LessThanOrEqual([
+                    'message' => self::MESSAGE_MAX_VALUE,
+                    'value' => $this->getParameter('items.max.result')
+                ])
+            ]
+        ];
+        $constraint = new Assert\Collection($collection);
+        $violations = $validator->validate($input, $constraint);
+
+        return $violations;
+    }
+
     /**
      * @Route("/create", methods={"POST"}, name="item_create")
      * @param Request $request
@@ -87,7 +110,7 @@ class ItemController extends BaseController
         }
         $now = new \DateTime();
         $inputData = $this->convertJson($request);
-        $errors = self::validate($inputData);
+        $errors = $this->validatePost($inputData);
         if (\count($errors) > 0) {
             throw new ValidationException($errors, self::INPUT_DATA_ERROR);
         }
@@ -103,13 +126,13 @@ class ItemController extends BaseController
         $item->setPosition(null === $lastPosition ? 0 : $lastPosition + 1);
         $itemRepository->create($item);
 
-        return new JsonResponse($item->toArray());
+        return new ApiResponse($item->toArray());
     }
 
     /**
      * @Route("/read/{inputDate}/{count}/{page}", methods={"GET"},
      *     name="item_read_items",
-     *     requirements={"count"="\d+", "count"="\d+"})
+     *     requirements={"inputDate"="\d{4}-\d{2}-\d{2}", "count"="\d+", "page"="\d+"})
      * @param string $inputDate
      * @param int $page
      * @param int $count
@@ -122,22 +145,24 @@ class ItemController extends BaseController
     public function readItems(string $inputDate, int $page, int $count,
                               ItemRepository $itemRepository)
     {
-        $errors = [];
-        $itemsMaxResult = $this->getParameter('items.max.result');
-        if ($count > $itemsMaxResult) {
-            $errors['count'] = [\sprintf('Count must be less then %s', $itemsMaxResult)];
-        }
-        try {
-            $date = $this->createDate($inputDate);
-        } catch (ValidationException $exception) {
-            $errors['date'] = [$exception->getMessage()];
-        }
+
+        $errors = $this->validateGet([
+            'date' => $inputDate,
+            'count' => $count
+        ]);
         if (\count($errors) > 0) {
-            throw new ValidationException('Ошибка данных', $errors);
+            throw new ValidationException($errors);
         }
-        if (!isset($date)) {
-            throw new \Exception('Var $date does not set');
-        }
+        $date = new \DateTime(
+            $inputDate,
+            new DateTimeZone('+00:00')
+        );
+//        if (\count($errors) > 0) {
+//            throw new ValidationException($errors);
+//        }
+//        if (!isset($date)) {
+//            throw new \Exception('Var $date does not set');
+//        }
         $start = $page * $count - $count;
         $user = $this->getUser();
         if (!($user instanceof User)) {
@@ -149,7 +174,7 @@ class ItemController extends BaseController
         foreach ($items as $item) {
             $result[] = $item->toArray(true);
         }
-        return new JsonResponse($result);
+        return new ApiResponse($result);
 
     }
 
@@ -174,6 +199,6 @@ class ItemController extends BaseController
         }
         $itemRepository->delete($item);
 
-        return new JsonResponse(['success' => true]);
+        return new ApiResponse();
     }
 }

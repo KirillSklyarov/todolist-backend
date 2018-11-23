@@ -32,7 +32,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class UserController extends BaseController
 {
 
-    public static function validate(array $input): ConstraintViolationListInterface
+    public function validate(array $input): ConstraintViolationListInterface
     {
         $validator = Validation::createValidator();
         $collection = [
@@ -114,7 +114,7 @@ class UserController extends BaseController
         }
 
         $inputData = $this->convertJson($request);
-        $errors = self::validate($inputData);
+        $errors = $this->validate($inputData);
 
         if (\count($errors) > 0) {
             throw new ValidationException($errors, self::INPUT_DATA_ERROR);
@@ -176,7 +176,7 @@ class UserController extends BaseController
     {
         $now = new \DateTime();
         $inputData = $this->convertJson($request);
-        $errors = self::validate($inputData);
+        $errors = $this->validate($inputData);
         if (\count($errors) > 0) {
             throw new ValidationException($errors, self::INPUT_DATA_ERROR);
         }

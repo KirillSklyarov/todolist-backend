@@ -35,15 +35,20 @@ class ExceptionListener
         $exception = $event->getException();
         try {
             // TODO logger
-            $error = (new Error())->setCode($exception->getCode());
+            $error = new Error();
             if ($exception instanceof HttpExceptionInterface) {
+                $error->setCode($exception->getStatusCode());
                 $error->setMessage($exception->getMessage());
                 if ($exception instanceof ValidationException) {
                     $error->setValidationErrors($exception->getErrors());
                 }
-            } elseif ($this->container->get('kernel')->getEnvironment() === 'dev') {
-                $error->setMessage($exception->getMessage());
+            } else {
+                $error->setCode($exception->getCode());
+                if ($this->container->get('kernel')->getEnvironment() === 'dev') {
+                    $error->setMessage($exception->getMessage());
+                }
             }
+            throw new \Exception();
             $apiResponse = new ApiResponse(null, $error, false);
             $event->setResponse($apiResponse);
         } catch (\Exception $exception) {

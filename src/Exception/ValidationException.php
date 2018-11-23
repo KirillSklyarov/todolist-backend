@@ -29,7 +29,7 @@ class ValidationException extends BadRequestHttpException
      * @param \Exception|null $previous
      */
     public function __construct(ConstraintViolationListInterface $errors,
-                                string $message = null,
+                                string $message = 'Input data error',
                                 \Exception $previous = null)
     {
         $this->errors = $errors;

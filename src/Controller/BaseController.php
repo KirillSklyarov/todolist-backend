@@ -25,6 +25,7 @@ class BaseController extends AbstractController
     const MESSAGE_PATTERN = 'regexp';
     const MESSAGE_DATE = 'date';
     const MESSAGE_INTEGER = 'integer';
+    const MESSAGE_MAX_VALUE = 'maxValue';
 
     protected function convertJson(Request $request)
     {
