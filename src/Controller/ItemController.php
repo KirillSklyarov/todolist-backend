@@ -130,7 +130,7 @@ class ItemController extends BaseController
     }
 
     /**
-     * @Route("/read/{inputDate}/{count}/{page}", methods={"GET"},
+     * @Route("/read/{inputDate}/{page}/{count}", methods={"GET"},
      *     name="item_read_items",
      *     requirements={"inputDate"="\d{4}-\d{2}-\d{2}", "count"="\d+", "page"="\d+"})
      * @param string $inputDate
