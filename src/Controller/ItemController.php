@@ -78,18 +78,52 @@ class ItemController extends BaseController
                 new Assert\Date([
                     'message' => self::MESSAGE_DATE
                 ])
-            ],
-            'count' => [
+            ]
+        ];
+        if (\array_key_exists('count', $input)) {
+            $collection['count'] = [
                 new Assert\LessThanOrEqual([
                     'message' => self::MESSAGE_MAX_VALUE,
                     'value' => $this->getParameter('items.max.result')
                 ])
-            ]
-        ];
+            ];
+        }
         $constraint = new Assert\Collection($collection);
         $violations = $validator->validate($input, $constraint);
 
         return $violations;
+    }
+
+    /**
+     * @Route("/count/{inputDate}", methods={"GET"},
+     *     name="item_count",
+     *     requirements={"inputDate"="\d{4}-\d{2}-\d{2}"})
+     * @param string $inputDate
+     * @param ItemRepository $itemRepository
+     * @return ApiResponse
+     * @throws ClassException
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function count(string $inputDate, ItemRepository $itemRepository)
+    {
+        $user = $this->getUser();
+        if (!($user instanceof User)) {
+            throw new ClassException($user, '$user', User::class);
+        }
+
+        $errors = $this->validateGet([
+            'date' => $inputDate,
+        ]);
+        if (\count($errors) > 0) {
+            throw new ValidationException($errors);
+        }
+        $date = new \DateTime(
+            $inputDate,
+            new DateTimeZone('+00:00')
+        );
+        $count = $itemRepository->getCount($date);
+
+        return new ApiResponse($count);
     }
 
     /**
@@ -157,12 +191,6 @@ class ItemController extends BaseController
             $inputDate,
             new DateTimeZone('+00:00')
         );
-//        if (\count($errors) > 0) {
-//            throw new ValidationException($errors);
-//        }
-//        if (!isset($date)) {
-//            throw new \Exception('Var $date does not set');
-//        }
         $start = $page * $count - $count;
         $user = $this->getUser();
         if (!($user instanceof User)) {

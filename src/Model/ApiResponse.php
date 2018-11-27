@@ -16,7 +16,7 @@ class ApiResponse extends JsonResponse
 {
     /**
      * ApiResponse constructor.
-     * @param array|null $data
+     * @param mixed $data
      * @param Error|null $error
      * @param bool $success
      * @param int $status
@@ -24,7 +24,7 @@ class ApiResponse extends JsonResponse
      * @param bool $json
      * @throws ClassException
      */
-    public function __construct(?array $data = null,
+    public function __construct($data = null,
                                 ?Error $error = null,
                                 bool $success = true,
                                 array $headers = array())

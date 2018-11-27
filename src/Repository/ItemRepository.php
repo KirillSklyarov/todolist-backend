@@ -59,6 +59,24 @@ class ItemRepository extends ServiceEntityRepository
         }
     }
 
+
+    /**
+     * @param \DateTime $date
+     * @return int
+     * @throws NonUniqueResultException
+     */
+    public function getCount(\DateTime $date): int
+    {
+        $qb = $this->createQueryBuilder('item');
+        $qb->select('count(item.id)')
+            ->where($qb->expr()->eq('item.date', ':date'))
+            ->setParameter(':date', $date);
+        $query = $qb->getQuery();
+        $count = $query->getSingleScalarResult();
+
+        return $count;
+    }
+
     /**
      * @param User $user
      * @param \DateTime $date
@@ -78,8 +96,7 @@ class ItemRepository extends ServiceEntityRepository
                 'date' => $date
             ])
             ->orderBy('item.position', 'desc')
-            ->setMaxResults(1)
-        ;
+            ->setMaxResults(1);
         $query = $qb->getQuery();
 
         $result = $query->getOneOrNullResult();
