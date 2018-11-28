@@ -160,7 +160,10 @@ class ItemController extends BaseController
         $item->setPosition(null === $lastPosition ? 0 : $lastPosition + 1);
         $itemRepository->create($item);
 
-        return new ApiResponse($item->toArray());
+        return new ApiResponse([
+            'item' => $item->toArray(),
+            'count' => $itemRepository->getCount($item->getDate())
+        ]);
     }
 
     /**
@@ -173,8 +176,6 @@ class ItemController extends BaseController
      * @param ItemRepository $itemRepository
      * @return JsonResponse
      * @throws ClassException
-     * @throws \ReflectionException
-     * @throws \Exception
      */
     public function readItems(string $inputDate, int $page, int $count,
                               ItemRepository $itemRepository)
