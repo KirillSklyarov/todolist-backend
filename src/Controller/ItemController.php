@@ -176,6 +176,7 @@ class ItemController extends BaseController
      * @param ItemRepository $itemRepository
      * @return JsonResponse
      * @throws ClassException
+     * @throws \Doctrine\ORM\NonUniqueResultException
      */
     public function readItems(string $inputDate, int $page, int $count,
                               ItemRepository $itemRepository)
@@ -203,7 +204,10 @@ class ItemController extends BaseController
         foreach ($items as $item) {
             $result[] = $item->toArray(true);
         }
-        return new ApiResponse($result);
+        return new ApiResponse([
+            'items' => $result,
+            'count' => $itemRepository->getCount($date)
+        ]);
 
     }
 
