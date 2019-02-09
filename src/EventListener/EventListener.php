@@ -8,17 +8,18 @@
 
 namespace App\EventListener;
 
-use App\Exception\ClassException;
 use App\Exception\ValidationException;
 use App\Model\ApiResponse;
 use App\Model\Error;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
-class ExceptionListener
+class EventListener
 {
     /**
      * @var ContainerInterface
@@ -28,6 +29,30 @@ class ExceptionListener
     public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
+    }
+
+    public function onKernelRequest(GetResponseEvent $event)
+    {
+        // Don't do anything if it's not the master request.
+        if (!$event->isMasterRequest()) {
+            return;
+        }
+
+        if ('OPTIONS' === $event->getRequest()->getRealMethod()) {
+            $event->setResponse(new JsonResponse());
+        }
+    }
+
+    public function onKernelResponse(FilterResponseEvent $event)
+    {
+        // TODO implement log
+        $response = $event->getResponse();
+        $response->setStatusCode(200);
+        $responseHeaders = $response->headers;
+
+        $responseHeaders->set('Access-Control-Allow-Headers', 'origin, content-type, accept, x-auth-token');
+        $responseHeaders->set('Access-Control-Allow-Origin', '*');
+        $responseHeaders->set('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, PATCH, OPTIONS');
     }
 
     public function onKernelException(GetResponseForExceptionEvent $event)
@@ -48,7 +73,6 @@ class ExceptionListener
                     $error->setMessage($exception->getMessage());
                 }
             }
-            throw new \Exception();
             $apiResponse = new ApiResponse(null, $error, false);
             $event->setResponse($apiResponse);
         } catch (\Exception $exception) {

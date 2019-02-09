@@ -28,10 +28,6 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 class TokenAuthenticator extends AbstractGuardAuthenticator
 {
-    const AUTH_NO_NEED = [
-        'user_create',
-        'user_login'
-    ];
     const TOKEN_NOT_FOUND = 'Token not found';
 
     /**
@@ -73,6 +69,8 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
      * Called on every request to decide if this authenticator should be
      * used for the request. Returning false will cause this authenticator
      * to be skipped.
+     * @param Request $request
+     * @return bool
      */
     public function supports(Request $request)
     {
@@ -83,6 +81,8 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
     /**
      * Called on every request. Return whatever credentials you want to
      * be passed to getUser() as $credentials.
+     * @param Request $request
+     * @return array
      */
     public function getCredentials(Request $request)
     {
@@ -120,8 +120,7 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
         $token->setLastUsageAt($now);
         $user = $token->getUser();
         $user->setCurrentToken($token)
-            ->setLastEnterAt($now)
-        ;
+            ->setLastEnterAt($now);
         $this->tokenRepository->update($token);
         $this->userRepository->update($user);
         return $user;

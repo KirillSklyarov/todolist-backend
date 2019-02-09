@@ -95,7 +95,7 @@ class ItemController extends BaseController
     }
 
     /**
-     * @Route("/count/{inputDate}", methods={"GET"},
+     * @Route("/count/{inputDate}", methods={"GET", "OPTIONS"},
      *     name="item_count",
      *     requirements={"inputDate"="\d{4}-\d{2}-\d{2}"})
      * @param string $inputDate
@@ -103,6 +103,7 @@ class ItemController extends BaseController
      * @return ApiResponse
      * @throws ClassException
      * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws \Exception
      */
     public function count(string $inputDate, ItemRepository $itemRepository)
     {
@@ -121,13 +122,13 @@ class ItemController extends BaseController
             $inputDate,
             new DateTimeZone('+00:00')
         );
-        $count = $itemRepository->getCount($date);
+        $count = $itemRepository->getCount($user, $date);
 
         return new ApiResponse($count);
     }
 
     /**
-     * @Route("/create", methods={"POST"}, name="item_create")
+     * @Route("/create", methods={"POST", "OPTIONS"}, name="item_create")
      * @param Request $request
      * @param ItemRepository $itemRepository
      * @return JsonResponse
@@ -162,12 +163,12 @@ class ItemController extends BaseController
 
         return new ApiResponse([
             'item' => $item->toArray(),
-            'count' => $itemRepository->getCount($item->getDate())
+            'count' => $itemRepository->getCount($user, $item->getDate())
         ]);
     }
 
     /**
-     * @Route("/read/{inputDate}/{page}/{count}", methods={"GET"},
+     * @Route("/read/{inputDate}/{page}/{count}", methods={"GET", "OPTIONS"},
      *     name="item_read_items",
      *     requirements={"inputDate"="\d{4}-\d{2}-\d{2}", "count"="\d+", "page"="\d+"})
      * @param string $inputDate
@@ -177,6 +178,7 @@ class ItemController extends BaseController
      * @return JsonResponse
      * @throws ClassException
      * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws \Exception
      */
     public function readItems(string $inputDate, int $page, int $count,
                               ItemRepository $itemRepository)
@@ -217,10 +219,13 @@ class ItemController extends BaseController
     }
 
     /**
-     * @Route("/delete/{uuid}", methods={"POST"}, name="item_delete",
+     * @Route("/delete/{uuid}", methods={"POST", "OPTIONS"}, name="item_delete",
      *     requirements={"uuid" = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"})
      * @param string $uuid
+     * @param ItemRepository $itemRepository
+     * @param UserInterface $user
      * @return JsonResponse
+     * @throws ClassException
      * @throws \Exception
      */
     public function delete(string $uuid, ItemRepository $itemRepository, UserInterface $user)

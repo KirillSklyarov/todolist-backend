@@ -33,11 +33,8 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
-    App\EventListener\ExceptionListener:
+    App\EventListener\EventListener:
         tags:
-        - { name: kernel.event_listener, event: kernel.exception }
-
-    app.cors_listener:
-        class: App\EventListener\ResponseListener
-        tags:
-        - { name: kernel.event_listener, event: kernel.response, method: onKernelResponse }
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+            - { name: kernel.event_listener, event: kernel.response, method: onKernelResponse }
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }

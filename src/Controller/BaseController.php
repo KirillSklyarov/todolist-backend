@@ -17,6 +17,10 @@ use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Constraints as Assert;
 
+/**
+ * Class BaseController
+ * @package App\Controller
+ */
 class BaseController extends AbstractController
 {
     const INPUT_DATA_ERROR = 'Input data error';
