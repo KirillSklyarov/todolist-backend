@@ -61,16 +61,23 @@ class ItemRepository extends ServiceEntityRepository
 
 
     /**
+     * @param User $user
      * @param \DateTime $date
      * @return int
      * @throws NonUniqueResultException
      */
-    public function getCount(\DateTime $date): int
+    public function getCount(User $user, \DateTime $date): int
     {
         $qb = $this->createQueryBuilder('item');
         $qb->select('count(item.id)')
-            ->where($qb->expr()->eq('item.date', ':date'))
-            ->setParameter(':date', $date);
+            ->where($qb->expr()->andX(
+                $qb->expr()->eq('item.date', ':date'),
+                $qb->expr()->eq('item.user', ':user')
+            ))
+            ->setParameters([
+                'user' => $user,
+                'date' => $date
+            ]);
         $query = $qb->getQuery();
         $count = $query->getSingleScalarResult();
 

@@ -206,7 +206,7 @@ class ItemController extends BaseController
         }
         return new ApiResponse([
             'items' => $result,
-            'count' => $itemRepository->getCount($date)
+            'count' => $itemRepository->getCount($user, $date)
         ]);
 
     }
