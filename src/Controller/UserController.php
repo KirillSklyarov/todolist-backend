@@ -91,7 +91,7 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/register", methods={"POST"}, name="user_register")
+     * @Route("/register", methods={"POST, OPTIONS"}, name="user_register")
      * @param Request $request
      * @param UserRepository $userRepository
      * @param ValidatorInterface $validator
@@ -100,7 +100,6 @@ class UserController extends BaseController
      * @throws ClassException
      * @throws \Doctrine\DBAL\ConnectionException
      * @throws \Doctrine\ORM\ORMException
-     * @throws \ReflectionException
      * @throws \Exception
      */
     public function register(Request $request,
@@ -146,7 +145,7 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/info", methods={"GET"}, name="user_info")
+     * @Route("/info", methods={"GET, OPTIONS"}, name="user_info")
      * @return JsonResponse
      * @throws ClassException
      */
@@ -198,7 +197,7 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/logout", methods={"POST"}, name="user_logout")
+     * @Route("/logout", methods={"POST, OPTIONS"}, name="user_logout")
      * @param TokenRepository $tokenRepository
      * @return JsonResponse
      * @throws ClassException
