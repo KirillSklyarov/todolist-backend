@@ -66,7 +66,7 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/create", methods={"POST"}, name="user_create")
+     * @Route("/create", methods={"POST", "OPTIONS"}, name="user_create")
      * @param UserRepository $userRepository
      * @return JsonResponse
      * @throws \Exception
@@ -91,7 +91,7 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/register", methods={"POST, OPTIONS"}, name="user_register")
+     * @Route("/register", methods={"POST", "OPTIONS"}, name="user_register")
      * @param Request $request
      * @param UserRepository $userRepository
      * @param ValidatorInterface $validator
@@ -145,7 +145,7 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/info", methods={"GET, OPTIONS"}, name="user_info")
+     * @Route("/info", methods={"GET", "OPTIONS"}, name="user_info")
      * @return JsonResponse
      * @throws ClassException
      */
@@ -160,7 +160,7 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/login", methods={"POST"}, name="user_login")
+     * @Route("/login", methods={"POST", "OPTIONS"}, name="user_login")
      * @param Request $request
      * @param UserRepository $userRepository
      * @param UserPasswordEncoderInterface $encoder
@@ -197,7 +197,7 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/logout", methods={"POST, OPTIONS"}, name="user_logout")
+     * @Route("/logout", methods={"POST", "OPTIONS"}, name="user_logout")
      * @param TokenRepository $tokenRepository
      * @return JsonResponse
      * @throws ClassException
