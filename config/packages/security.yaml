@@ -52,5 +52,5 @@ security:
          - { path: ^/api/v1/user/create, roles: IS_AUTHENTICATED_ANONYMOUSLY }
          - { path: ^/api/v1/user/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
          - { path: ^/api/v1/user/register, roles: ROLE_UNREGISTRED_USER }
-         - { path: ^/api/v1/user/logout, roles: ROLE_REGISTRED_USER }
+         - { path: ^/api/v1/user/logout, roles: ROLE_USER }
          - { path: ^/api/v1, roles: ROLE_USER }
