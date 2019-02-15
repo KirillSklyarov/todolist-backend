@@ -183,7 +183,6 @@ class ItemController extends BaseController
     public function readItems(string $inputDate, int $page, int $count,
                               ItemRepository $itemRepository)
     {
-
         $errors = $this->validateGet([
             'date' => $inputDate,
             'count' => $count

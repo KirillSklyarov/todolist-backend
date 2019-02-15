@@ -47,7 +47,7 @@ class EventListener
     {
         // TODO implement log
         $response = $event->getResponse();
-        $response->setStatusCode(200);
+//        $response->setStatusCode(200);
         $responseHeaders = $response->headers;
 
         $responseHeaders->set('Access-Control-Allow-Headers', 'origin, content-type, accept, x-auth-token');
@@ -61,19 +61,23 @@ class EventListener
         try {
             // TODO logger
             $error = new Error();
+            $apiResponse = new ApiResponse(null, $error, false);
+
             if ($exception instanceof HttpExceptionInterface) {
                 $error->setCode($exception->getStatusCode());
                 $error->setMessage($exception->getMessage());
+                $apiResponse->setStatusCode($exception->getStatusCode());
                 if ($exception instanceof ValidationException) {
                     $error->setValidationErrors($exception->getErrors());
                 }
             } else {
+                $apiResponse->setStatusCode(500);
                 $error->setCode($exception->getCode());
                 if ($this->container->get('kernel')->getEnvironment() === 'dev') {
                     $error->setMessage($exception->getMessage());
                 }
             }
-            $apiResponse = new ApiResponse(null, $error, false);
+//            $apiResponse = new ApiResponse(null, $error, false);
             $event->setResponse($apiResponse);
         } catch (\Exception $exception) {
             $jsonResponse = new JsonResponse(
@@ -86,6 +90,7 @@ class EventListener
                     'data' => null
                 ]
             );
+            $jsonResponse->setStatusCode(500);
             $event->setResponse($jsonResponse);
         }
     }
