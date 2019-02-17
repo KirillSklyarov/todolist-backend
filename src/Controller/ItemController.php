@@ -42,19 +42,28 @@ class ItemController extends BaseController
                     'maxMessage' => self::MESSAGE_MAX_LENGHT
                 ])
             ],
-            'description' => [
-                new Assert\Optional(),
-                new Assert\Length([
-                    'max' => 4000,
-                    'minMessage' => self::MESSAGE_MIN_LENGHT
-                ])
-            ],
+//            'description' => [
+//                new Assert\Length([
+//                    'max' => 4000,
+//                    'minMessage' => self::MESSAGE_MAX_LENGHT
+//                ])
+//            ],
             'date' => [
                 new Assert\Date([
                     'message' => self::MESSAGE_DATE
                 ])
             ]
         ];
+
+        if(\array_key_exists('description', $input) && $input['description']) {
+            $collection['description'] = [
+                new Assert\Length([
+                    'max' => 4000,
+                    'minMessage' => self::MESSAGE_MAX_LENGHT
+                ])
+            ];
+        }
+
         if (\array_key_exists('position', $input)) {
             $collection['position'] = [
                 new Assert\Optional(),
@@ -155,7 +164,7 @@ class ItemController extends BaseController
             ->setCreatedAt($now)
             ->setUpdatedAt($now)
             ->setTitle($inputData['title'])
-            ->setDescription($inputData['description'])
+            ->setDescription(\array_key_exists('description', $inputData) ? $inputData['description'] : '')
             ->setDate($date);
         $lastPosition = $itemRepository->getLastPosition($user, $item->getDate());
         $item->setPosition(null === $lastPosition ? 0 : $lastPosition + 1);
