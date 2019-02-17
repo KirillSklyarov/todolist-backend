@@ -6,7 +6,8 @@
 parameters:
     locale: '%env(LOCALE)%'
     auth.no.need.routes: ['user_create', 'user_login']
-    token.lifetime: '%env(TOKEN_LIFETIME)%'
+    token.lifetime.unregistred: '%env(TOKEN_LIFETIME_UNREGISTRED)%'
+    token.lifetime.registred: '%env(TOKEN_LIFETIME_REGISTRED)%'
     items.max.result: '%env(ITEMS_MAX_RESULT)%'
 
 services:

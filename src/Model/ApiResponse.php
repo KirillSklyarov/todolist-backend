@@ -32,13 +32,13 @@ class ApiResponse extends JsonResponse
 
     /**
      * ApiResponse constructor.
-     * @param array|null $apiData
+     * @param mixed $apiData
      * @param Error|null $error
      * @param bool $success
      * @param int $status
      * @param array $headers
      */
-    public function __construct(?array $apiData = null,
+    public function __construct($apiData = null,
                                 ?Error $error = null,
                                 bool $success = true,
                                 int $status = 200,

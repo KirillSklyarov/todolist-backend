@@ -10,6 +10,8 @@ namespace App\Security;
 
 use App\Entity\Token;
 use App\Entity\User;
+use App\Model\ApiResponse;
+use App\Model\Error;
 use App\Repository\TokenRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -28,7 +30,10 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 class TokenAuthenticator extends AbstractGuardAuthenticator
 {
-    const TOKEN_NOT_FOUND = 'Token not found';
+    const NOT_FOUND = 'Token not found';
+    const TOKEN_REQUIRED = 'Token is required';
+    const AUTH_REQUIRED = 'Authentication is required';
+    const AUTH_FAILURE = 'Authentication is failure';
 
     /**
      * @var ParameterBagInterface
@@ -48,12 +53,7 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
     /**
      * @var string
      */
-    private $message = 'Authorisation required QQQ';
-
-    /**
-     * @var int
-     */
-    private $code = 1;
+    private $message = 'Authorization required';
 
     public function __construct(ParameterBagInterface $bag,
                                 TokenRepository $tokenRepository,
@@ -101,20 +101,23 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
     {
         $userToken = $credentials['token'];
         if (null === $userToken) {
-            $this->message = 'Token is requered';
+            $this->message = self::TOKEN_REQUIRED;
             return null;
         }
         $token = $this->tokenRepository->findOneBy(['uuid' => $userToken]);
         if (null === $token) {
-            $this->message = self::TOKEN_NOT_FOUND;
+            $this->message = self::NOT_FOUND;
             return null;
         }
-        $expiredAt = clone $token->getCreatedAt();
-        $interval = new \DateInterval($this->bag->get('token.lifetime'));
+        $expiredAt = clone $token->getLastUsageAt();
+        $lifeTime = $token->getUser()->isPermanent() ?
+            $this->bag->get('token.lifetime.registred') :
+            $this->bag->get('token.lifetime.unregistred');
+        $interval = new \DateInterval($lifeTime);
         $expiredAt->add($interval);
         $now = new \DateTime();
         if ($expiredAt <= $now) {
-            $this->message = self::TOKEN_NOT_FOUND;
+            $this->message = self::NOT_FOUND;
             return null;
         }
         $token->setLastUsageAt($now);
@@ -143,12 +146,9 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception)
     {
-        $data = [
-            'message' => $this->message,
-            'code' => $this->code
-        ];
-
-        return new JsonResponse($data, Response::HTTP_UNAUTHORIZED);
+        $error = new Error(self::AUTH_FAILURE, Response::HTTP_UNAUTHORIZED);
+        $apiResponse = new ApiResponse(null, $error, false, Response::HTTP_UNAUTHORIZED);
+        return $apiResponse;
     }
 
     /**
@@ -156,11 +156,9 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
      */
     public function start(Request $request, AuthenticationException $authException = null)
     {
-        $data = [
-            'message' => 'Authentication Required!!!!!!'
-        ];
-
-        return new JsonResponse($data, Response::HTTP_UNAUTHORIZED);
+        $error = new Error(self::AUTH_REQUIRED, Response::HTTP_UNAUTHORIZED);
+        $apiResponse = new ApiResponse(null, $error, false, Response::HTTP_UNAUTHORIZED);
+        return $apiResponse;
     }
 
 

@@ -66,7 +66,7 @@ class User implements UserInterface
      * @var boolean
      * @ORM\Column(type="boolean", name="permanent")
      */
-    private $permanent;
+    private $permanent = false;
 
     /**
      * @var \DateTime
@@ -284,7 +284,7 @@ class User implements UserInterface
 
     }
 
-    public function getPermanent(): ?bool
+    public function isPermanent(): bool
     {
         return $this->permanent;
     }
@@ -353,7 +353,7 @@ class User implements UserInterface
 //            'updatedAt' => $this->getUpdatedAt()->format('c'),
 //            'registredAt' => $this->getRegistredAt() ?
 //                $this->getRegistredAt()->format('c') : null,
-            'isPermanent' => $this->getPermanent(),
+            'isPermanent' => $this->isPermanent(),
             'roles' => $this->getRoles()
         ];
     }

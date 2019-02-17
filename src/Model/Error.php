@@ -21,12 +21,19 @@ class Error
     /**
      * @var string
      */
-    private $message = 0;
+    private $message = '';
 
     /**
      * @var ValidationError[]
      */
     private $validationErrors = [];
+
+    public function __construct(string $message = '', int $code = 0, array $validationErrors = [])
+    {
+        $this->message = $message;
+        $this->code = $code;
+        $this->validationErrors = $validationErrors;
+    }
 
     /**
      * @return int
@@ -79,6 +86,15 @@ class Error
     public function setValidationErrors(array $validationErrors): Error
     {
         $this->validationErrors = $validationErrors;
+        return $this;
+    }
+
+    /**
+     * @param ValidationError $validationError
+     * @return Error
+     */
+    public function addValidationError(ValidationError $validationError): Error {
+        $this->validationErrors[] = $validationError;
         return $this;
     }
 
