@@ -106,6 +106,17 @@ class ApiResponse extends JsonResponse
     }
 
     /**
+     * @param int $encodingOptions
+     * @return JsonResponse
+     * @throws ClassException
+     */
+    public function setEncodingOptions($encodingOptions)
+    {
+        $this->setData($this->toArray());
+        return parent::setEncodingOptions($encodingOptions);
+    }
+
+    /**
      * @return string
      * @throws ClassException
      */
